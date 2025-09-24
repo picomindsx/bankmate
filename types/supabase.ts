@@ -1,5 +1,3 @@
-import { Branch, Lead, Permission, RolePermissions, User } from "./common";
-
 export type Json =
   | string
   | number
@@ -17,9 +15,69 @@ export type Database = {
   public: {
     Tables: {
       branches: {
-        Row: Branch;
-        Insert: Branch;
-        Update: Branch;
+        Row: {
+          address: Json;
+          code: string;
+          contact: Json;
+          created_at: string | null;
+          editable: boolean | null;
+          established_date: string | null;
+          id: string;
+          is_active: boolean | null;
+          manager: Json | null;
+          name: string;
+          operating_hours: Json | null;
+          parent_branch_id: string | null;
+          performance: Json | null;
+          region: string | null;
+          services: string[] | null;
+          target_metrics: Json | null;
+          type: Database["public"]["Enums"]["branch_type"];
+          updated_at: string | null;
+          zone: string | null;
+        };
+        Insert: {
+          address: Json;
+          code: string;
+          contact: Json;
+          created_at?: string | null;
+          editable?: boolean | null;
+          established_date?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          manager?: Json | null;
+          name: string;
+          operating_hours?: Json | null;
+          parent_branch_id?: string | null;
+          performance?: Json | null;
+          region?: string | null;
+          services?: string[] | null;
+          target_metrics?: Json | null;
+          type: Database["public"]["Enums"]["branch_type"];
+          updated_at?: string | null;
+          zone?: string | null;
+        };
+        Update: {
+          address?: Json;
+          code?: string;
+          contact?: Json;
+          created_at?: string | null;
+          editable?: boolean | null;
+          established_date?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          manager?: Json | null;
+          name?: string;
+          operating_hours?: Json | null;
+          parent_branch_id?: string | null;
+          performance?: Json | null;
+          region?: string | null;
+          services?: string[] | null;
+          target_metrics?: Json | null;
+          type?: Database["public"]["Enums"]["branch_type"];
+          updated_at?: string | null;
+          zone?: string | null;
+        };
         Relationships: [
           {
             foreignKeyName: "branches_parent_branch_id_fkey";
@@ -117,9 +175,141 @@ export type Database = {
         ];
       };
       leads: {
-        Row: Lead;
-        Insert: Lead;
-        Update: Lead;
+        Row: {
+          additional_info: string | null;
+          address: string | null;
+          annual_income: string | null;
+          application_status: Database["public"]["Enums"]["application_status"];
+          assigned_agent: string | null;
+          assigned_at: string | null;
+          assigned_branch: string | null;
+          assigned_staff: string | null;
+          assignment_status: string | null;
+          bank_assigned_at: string | null;
+          bank_branch: string | null;
+          bank_documents: Json | null;
+          bank_staff: string | null;
+          branch_id: string | null;
+          cibil_score: number | null;
+          client_name: string;
+          contact_number: string;
+          cost: number | null;
+          created_at: string | null;
+          created_by: string | null;
+          created_by_staff: boolean | null;
+          date_of_birth: string | null;
+          document_completion_status:
+            | Database["public"]["Enums"]["document_completion_status"]
+            | null;
+          documents_submitted_at: string | null;
+          edit_history: Json | null;
+          email: string | null;
+          id: string;
+          is_visible_to_staff: boolean | null;
+          lead_name: string | null;
+          lead_source: string;
+          lead_type: string;
+          loan_amount: string | null;
+          notes: string | null;
+          owner_manager_assignment: string | null;
+          purpose: string | null;
+          remarks: string | null;
+          selected_bank: string | null;
+          status: string | null;
+          status_updated_at: string | null;
+          timeline: Json | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          additional_info?: string | null;
+          address?: string | null;
+          annual_income?: string | null;
+          application_status: Database["public"]["Enums"]["application_status"];
+          assigned_agent?: string | null;
+          assigned_at?: string | null;
+          assigned_branch?: string | null;
+          assigned_staff?: string | null;
+          assignment_status?: string | null;
+          bank_assigned_at?: string | null;
+          bank_branch?: string | null;
+          bank_documents?: Json | null;
+          bank_staff?: string | null;
+          branch_id?: string | null;
+          cibil_score?: number | null;
+          client_name: string;
+          contact_number: string;
+          cost?: number | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          created_by_staff?: boolean | null;
+          date_of_birth?: string | null;
+          document_completion_status?:
+            | Database["public"]["Enums"]["document_completion_status"]
+            | null;
+          documents_submitted_at?: string | null;
+          edit_history?: Json | null;
+          email?: string | null;
+          id?: string;
+          is_visible_to_staff?: boolean | null;
+          lead_name?: string | null;
+          lead_source: string;
+          lead_type: string;
+          loan_amount?: string | null;
+          notes?: string | null;
+          owner_manager_assignment?: string | null;
+          purpose?: string | null;
+          remarks?: string | null;
+          selected_bank?: string | null;
+          status?: string | null;
+          status_updated_at?: string | null;
+          timeline?: Json | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          additional_info?: string | null;
+          address?: string | null;
+          annual_income?: string | null;
+          application_status?: Database["public"]["Enums"]["application_status"];
+          assigned_agent?: string | null;
+          assigned_at?: string | null;
+          assigned_branch?: string | null;
+          assigned_staff?: string | null;
+          assignment_status?: string | null;
+          bank_assigned_at?: string | null;
+          bank_branch?: string | null;
+          bank_documents?: Json | null;
+          bank_staff?: string | null;
+          branch_id?: string | null;
+          cibil_score?: number | null;
+          client_name?: string;
+          contact_number?: string;
+          cost?: number | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          created_by_staff?: boolean | null;
+          date_of_birth?: string | null;
+          document_completion_status?:
+            | Database["public"]["Enums"]["document_completion_status"]
+            | null;
+          documents_submitted_at?: string | null;
+          edit_history?: Json | null;
+          email?: string | null;
+          id?: string;
+          is_visible_to_staff?: boolean | null;
+          lead_name?: string | null;
+          lead_source?: string;
+          lead_type?: string;
+          loan_amount?: string | null;
+          notes?: string | null;
+          owner_manager_assignment?: string | null;
+          purpose?: string | null;
+          remarks?: string | null;
+          selected_bank?: string | null;
+          status?: string | null;
+          status_updated_at?: string | null;
+          timeline?: Json | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
             foreignKeyName: "leads_assigned_branch_fkey";
@@ -152,15 +342,42 @@ export type Database = {
         ];
       };
       permissions: {
-        Row: Permission;
-        Insert: Permission;
-        Update: Permission;
+        Row: {
+          category: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          category?: string | null;
+          description?: string | null;
+          id: string;
+          name: string;
+        };
+        Update: {
+          category?: string | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+        };
         Relationships: [];
       };
       role_permissions: {
-        Row: RolePermissions;
-        Insert: RolePermissions;
-        Update: RolePermissions;
+        Row: {
+          id: string;
+          permission_id: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+        };
+        Insert: {
+          id?: string;
+          permission_id?: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+        };
+        Update: {
+          id?: string;
+          permission_id?: string | null;
+          role?: Database["public"]["Enums"]["user_role"];
+        };
         Relationships: [
           {
             foreignKeyName: "role_permissions_permission_id_fkey";
@@ -172,9 +389,60 @@ export type Database = {
         ];
       };
       users: {
-        Row: User;
-        Insert: User;
-        Update: User;
+        Row: {
+          branch_id: string | null;
+          can_access_employer_login: boolean | null;
+          created_at: string | null;
+          designation: string | null;
+          email: string | null;
+          id: string;
+          is_active: boolean | null;
+          last_login: string | null;
+          name: string | null;
+          password: string | null;
+          permissions: Json | null;
+          phone: string | null;
+          photo: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+          type: Database["public"]["Enums"]["user_type"];
+          username: string;
+        };
+        Insert: {
+          branch_id?: string | null;
+          can_access_employer_login?: boolean | null;
+          created_at?: string | null;
+          designation?: string | null;
+          email?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_login?: string | null;
+          name?: string | null;
+          password?: string | null;
+          permissions?: Json | null;
+          phone?: string | null;
+          photo?: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+          type: Database["public"]["Enums"]["user_type"];
+          username: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          can_access_employer_login?: boolean | null;
+          created_at?: string | null;
+          designation?: string | null;
+          email?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_login?: string | null;
+          name?: string | null;
+          password?: string | null;
+          permissions?: Json | null;
+          phone?: string | null;
+          photo?: string | null;
+          role?: Database["public"]["Enums"]["user_role"];
+          type?: Database["public"]["Enums"]["user_type"];
+          username?: string;
+        };
         Relationships: [
           {
             foreignKeyName: "users_branch_id_fkey";

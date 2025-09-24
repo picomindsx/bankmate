@@ -4,6 +4,7 @@ import {
   User,
   Branch,
   Lead,
+  LeadApplication,
 } from "@/types/common";
 
 export const ALL_PERMISSIONS: Permission[] = [
@@ -466,3 +467,33 @@ export const staff: User[] = [
 export const leads: Lead[] = [
   // Leads data will be stored here
 ];
+
+export const emptyLeadApplication: LeadApplication = {
+  clientName: "",
+  contactNumber: "",
+  email: "",
+  dateOfBirth: "",
+  gender: "",
+  address: "",
+  panNumber: "",
+  aadharNumber: "",
+  loanTypes: [],
+  incomeCategory: "",
+  employmentType: "",
+  companyName: "",
+  designation: "",
+  workExperience: "",
+  monthlyIncome: "",
+  loanAmount: "",
+  loanPurpose: "",
+  propertyType: "",
+  propertyLocation: "",
+  propertyValue: "",
+  leadSource: "",
+  assignedBranch: "",
+  notes: "",
+  status: "new",
+  assignedTo: "",
+  createdBy: "Current Staff Member",
+  documents: {},
+};

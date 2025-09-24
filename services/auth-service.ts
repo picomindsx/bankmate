@@ -1,44 +1,47 @@
 import { users, staff, ALL_PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/consts";
+import { supabase } from "@/lib/supabase";
 import { Permission, User } from "@/types/common";
+import { toast } from "sonner";
 
-export const authenticateUser = (
+const getUser = async (username: string): Promise<User | null> => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .single();
+
+  if (error) {
+    toast.error(
+      "An error occurred while trying to get User. Please try again."
+    );
+    return null;
+  }
+
+  if (!data) {
+    toast.error("User not found");
+    return null;
+  }
+  return data as User;
+};
+
+export const authenticateUser = async (
   username: string,
   password: string
-): User | null => {
-  // Official login credentials
-  if (username === "Ajith6235" && password === "Ajith@6235") {
-    const user = users.find(
-      (u) => u.username === username && u.type === "official"
-    );
-    if (user) {
+): Promise<User | null> => {
+  const data = await getUser(username);
+
+  if (data) {
+    if (data.password === password) {
+      const user: User = { ...data } as User;
       user.lastLogin = new Date().toISOString();
       console.log("[v0] User authenticated:", user.name || "official owner");
       return user;
+    } else {
+      toast.error("Invalid password");
+      return null;
     }
   }
 
-  // Employee login (phone number and password)
-  const employee = staff.find((s) => s.phone === username && s.isActive);
-  console.log(
-    "[v0] Looking for employee with phone:",
-    username,
-    "Found:",
-    !!employee
-  );
-
-  if (employee) {
-    console.log("[v0] Employee found, checking password:", {
-      stored: employee.password,
-      provided: password,
-    });
-    if (employee.password === password || employee.password === username) {
-      employee.lastLogin = new Date().toISOString();
-      console.log("[v0] Employee authenticated:", employee.name);
-      return employee;
-    }
-  }
-
-  console.log("[v0] Authentication failed for username:", username);
   return null;
 };
 
@@ -50,25 +53,22 @@ export const verifyOTP = (otp: string, expectedOTP: string): boolean => {
   return otp === expectedOTP;
 };
 
-export const resetPassword = (
+export const resetPassword = async (
   username: string,
   newPassword: string
-): boolean => {
-  const userIndex = users.findIndex((u) => u.username === username);
-  if (userIndex !== -1) {
-    // In a real app, you'd hash the password
-    users[userIndex].password = newPassword;
-    return true;
+): Promise<Boolean> => {
+  const updated = await supabase
+    .from("users")
+    .update({ password: newPassword })
+    .eq("username", username);
+
+  if (updated.error) {
+    console.error("Error updating password:", updated.error);
+    return false;
   }
 
-  const staffIndex = staff.findIndex((s) => s.phone === username);
-  if (staffIndex !== -1) {
-    // In a real app, you'd hash the password
-    staff[staffIndex].password = newPassword;
-    return true;
-  }
-
-  return false;
+  toast.success("Password updated successfully");
+  return true;
 };
 
 export const login = (username: string, password: string): User | null => {

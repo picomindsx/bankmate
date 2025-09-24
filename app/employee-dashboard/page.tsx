@@ -56,6 +56,7 @@ import {
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
 import { LeadApplication as Lead } from "@/types/common";
+import { emptyLeadApplication } from "@/lib/consts";
 
 interface CustomOption {
   id: string;
@@ -91,35 +92,7 @@ const EmployeeDashboard = () => {
   // State for document management dialog
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
 
-  const [newLead, setNewLead] = useState<Partial<Lead>>({
-    clientName: "",
-    contactNumber: "",
-    email: "",
-    dateOfBirth: "",
-    gender: "",
-    address: "",
-    panNumber: "",
-    aadharNumber: "",
-    loanTypes: [],
-    incomeCategory: "",
-    employmentType: "",
-    companyName: "",
-    designation: "",
-    workExperience: "",
-    monthlyIncome: "",
-    loanAmount: "",
-    loanPurpose: "",
-    propertyType: "",
-    propertyLocation: "",
-    propertyValue: "",
-    leadSource: "",
-    assignedBranch: "",
-    notes: "",
-    status: "new",
-    assignedTo: "",
-    createdBy: "Current Staff Member",
-    documents: {},
-  });
+  const [newLead, setNewLead] = useState<Partial<Lead>>(emptyLeadApplication);
 
   const [customGender, setCustomGender] = useState("");
   const [customLoanType, setCustomLoanType] = useState("");
@@ -257,33 +230,8 @@ const EmployeeDashboard = () => {
 
     setMyLeads((prev) => [...prev, lead]);
     setNewLead({
-      clientName: "",
-      contactNumber: "",
-      email: "",
-      dateOfBirth: "",
-      gender: "",
-      address: "",
-      panNumber: "",
-      aadharNumber: "",
-      loanTypes: [],
-      incomeCategory: "",
-      employmentType: "",
-      companyName: "",
-      designation: "",
-      workExperience: "",
-      monthlyIncome: "",
-      loanAmount: "",
-      loanPurpose: "",
-      propertyType: "",
-      propertyLocation: "",
-      propertyValue: "",
-      leadSource: "",
-      assignedBranch: "",
-      notes: "",
-      status: "new",
-      assignedTo: "",
+      ...emptyLeadApplication,
       createdBy: "Current Staff Member",
-      documents: {},
     });
     setShowAddLead(false);
   };
