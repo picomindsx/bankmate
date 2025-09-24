@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ import {
 import { getBranches } from "@/services/branch-service";
 import { getLeads } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Lead } from "@/types/common";
+import { Branch, Lead, User } from "@/types/common";
 
 interface LeadAnalytics {
   totalLeads: number;
@@ -60,9 +60,14 @@ export function TotalLeadsOverview() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const branches = getBranches();
-  const staff = getStaff();
+  const [branches, setBranches] = useState([] as Branch[]);
+  const [staff, setStaff] = useState([] as User[]);
   const allLeads = getLeads();
+
+  useEffect(() => {
+    getBranches().then((branchList) => setBranches(branchList));
+    getStaff().then((staffList) => setStaff(staffList));
+  }, []);
 
   const analytics: LeadAnalytics = useMemo(() => {
     const filteredLeads = allLeads.filter((lead) => {

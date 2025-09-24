@@ -21,11 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
 import { addStaff } from "@/services/staff-service";
+import { Branch, User } from "@/types/common";
 
 export default function AddStaffPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [branches, setBranches] = useState<any[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -40,23 +41,17 @@ export default function AddStaffPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    const branchList = getBranches();
+  const fetchBranches = async () => {
+    const branchList = await getBranches();
     setBranches(branchList);
     if (branchList.length > 0) {
       setFormData((prev) => ({ ...prev, branchId: branchList[0].id }));
     }
-  }, []);
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-      // Create a temporary URL for preview
-      const photoUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, photo: photoUrl }));
-    }
   };
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +79,8 @@ export default function AddStaffPage() {
         designation: formData.designation,
         photo: formData.photo,
         branchId: formData.branchId,
-      });
+        password: formData.password,
+      } as User);
 
       setSuccess("Staff member added successfully!");
       setTimeout(() => {
@@ -235,7 +231,7 @@ export default function AddStaffPage() {
                   }
                   className="w-full px-3 py-2 border rounded-md bg-background"
                 >
-                  {branches.map((branch) => (
+                  {branches?.map((branch) => (
                     <option key={branch.id} value={branch.id}>
                       {branch.name}
                     </option>
@@ -249,10 +245,12 @@ export default function AddStaffPage() {
                   <div className="flex-1">
                     <Input
                       id="photo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="cursor-pointer"
+                      type="text"
+                      placeholder="paste image URL here"
+                      value={formData.photo}
+                      onChange={(e) =>
+                        handleInputChange("photo", e.target.value)
+                      }
                     />
                   </div>
                   {formData.photo && (

@@ -21,7 +21,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FacebookIntegration } from "@/components/facebook-integration";
 import StaffManagement from "@/components/staff-management";
-import { hasPermission } from "@/services/auth-service";
+import { hasPermission, resetPassword } from "@/services/auth-service";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -39,10 +40,29 @@ export default function SettingsPage() {
     }
   }, [user, router]);
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle password change logic here
-    alert("Password change functionality would be implemented here");
+
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    if (currentPassword !== user?.password) {
+      toast.error("Current password is incorrect");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    const updated = await resetPassword(user.username, newPassword);
+    if (updated) {
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    }
   };
 
   if (!user || user.type !== "official") {
@@ -228,6 +248,7 @@ export default function SettingsPage() {
                   </div>
                   <Button
                     type="submit"
+                    onClick={handlePasswordChange}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                   >
                     Update Password

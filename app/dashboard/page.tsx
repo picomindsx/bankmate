@@ -74,7 +74,7 @@ export default function DashboardPage() {
       return;
     }
 
-    setBranches(getBranches());
+    getBranches().then((branchList) => setBranches(branchList));
 
     const recentLeads = getLeads().filter(
       (lead) =>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
   const handleSaveBranch = (branchId: string) => {
     if (updateBranchName(branchId, editName)) {
-      setBranches(getBranches());
+      getBranches().then((branchList) => setBranches(branchList));
       setEditingBranch(null);
       setEditName("");
     }

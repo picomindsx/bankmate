@@ -19,8 +19,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Users, Bell } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getStaff, updateStaff } from "@/services/staff-service";
-import { User } from "@/types/common";
+import { getStaff, getStaffById, updateStaff } from "@/services/staff-service";
+import { Branch, User } from "@/types/common";
+import { getBranches } from "@/services/branch-service";
 
 export default function EditStaffPage() {
   const { user, logout } = useAuth();
@@ -29,6 +30,7 @@ export default function EditStaffPage() {
   const staffId = params.id as string;
 
   const [staffMember, setStaffMember] = useState<User | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -58,21 +60,24 @@ export default function EditStaffPage() {
       return;
     }
 
-    const staff = getStaff();
-    const member = staff.find((s) => s.id === staffId);
-    if (member) {
-      setStaffMember(member);
-      setFormData({
-        name: member.name || "",
-        phone: member.phone || "",
-        designation: member.designation || "",
-        email: member.email || "",
-        photo: member.photo || "",
-        branchId: member.branchId || "1",
-      });
-    } else {
-      setError("Staff member not found");
-    }
+    getStaffById(staffId).then((member) => {
+      if (member) {
+        setStaffMember(member);
+        console.log({ member });
+        setFormData({
+          name: member.name || "",
+          phone: member.phone || "",
+          designation: member.designation || "",
+          email: member.email || "",
+          photo: member.photo || "",
+          branchId: member.branch_id || null,
+        });
+      } else {
+        setError("Staff member not found");
+      }
+    });
+
+    getBranches().then((branchList) => setBranches(branchList));
   }, [user, router, staffId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,7 +97,11 @@ export default function EditStaffPage() {
         return;
       }
 
-      const updated = updateStaff(staffId, {
+      console.log("first");
+
+      console.log(formData);
+
+      const updated = await updateStaff(staffId, {
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
@@ -100,9 +109,17 @@ export default function EditStaffPage() {
         photo: formData.photo,
         branchId: formData.branchId,
       });
-
+      console.log(updated);
       if (updated) {
         setSuccess("Staff member updated successfully!");
+        setFormData({
+          name: "",
+          phone: "",
+          designation: "",
+          email: "",
+          photo: "",
+          branchId: "",
+        });
         setTimeout(() => {
           router.push("/dashboard/staff");
         }, 2000);
@@ -248,66 +265,16 @@ export default function EditStaffPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="designation">Designation *</Label>
-                  {showCustomInput.designation ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter custom designation"
-                        value={customInputs.designation}
-                        onChange={(e) =>
-                          setCustomInputs((prev) => ({
-                            ...prev,
-                            designation: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => handleCustomInputSubmit("designation")}
-                        size="sm"
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setShowCustomInput((prev) => ({
-                            ...prev,
-                            designation: false,
-                          }))
-                        }
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <select
-                      id="designation"
-                      value={formData.designation}
-                      onChange={(e) =>
-                        handleCustomSelection("designation", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border rounded-md bg-background"
-                      required
-                    >
-                      <option value="">Select designation</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Assistant Manager">
-                        Assistant Manager
-                      </option>
-                      <option value="Senior Executive">Senior Executive</option>
-                      <option value="Executive">Executive</option>
-                      <option value="Junior Executive">Junior Executive</option>
-                      <option value="Team Lead">Team Lead</option>
-                      <option value="Sales Representative">
-                        Sales Representative
-                      </option>
-                      <option value="Customer Service">Customer Service</option>
-                      <option value="Branch Head">Branch Head</option>
-                      <option value="custom">+ Add Custom Designation</option>
-                    </select>
-                  )}
+                  <Input
+                    id="designation"
+                    type="text"
+                    placeholder="Enter designation"
+                    value={formData.designation}
+                    onChange={(e) =>
+                      handleInputChange("designation", e.target.value)
+                    }
+                    required
+                  />
                 </div>
               </div>
 
@@ -351,14 +318,15 @@ export default function EditStaffPage() {
                     id="branch"
                     value={formData.branchId}
                     onChange={(e) =>
-                      handleCustomSelection("branchId", e.target.value)
+                      handleInputChange("branchId", e.target.value)
                     }
                     className="w-full px-3 py-2 border rounded-md bg-background"
                   >
-                    <option value="1">Mumbai Central Branch</option>
-                    <option value="2">Delhi North Branch</option>
-                    <option value="3">Bangalore South Branch</option>
-                    <option value="custom">+ Add Custom Branch</option>
+                    {branches?.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
                   </select>
                 )}
               </div>
@@ -387,7 +355,12 @@ export default function EditStaffPage() {
               )}
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1"
+                  onClick={handleSubmit}
+                >
                   {isLoading ? "Updating..." : "Update Staff Member"}
                 </Button>
                 <Link href="/dashboard/staff">

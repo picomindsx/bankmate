@@ -103,9 +103,10 @@ export default function BranchManagement({
   });
 
   useEffect(() => {
-    const branchData = getBranches();
-    setBranches(branchData);
-    setFilteredBranches(branchData);
+    getBranches().then((branchList) => {
+      setBranches(branchList);
+      setFilteredBranches(branchList);
+    });
   }, []);
 
   useEffect(() => {
@@ -147,7 +148,7 @@ export default function BranchManagement({
     };
 
     const createdBranch = addBranch(branchData);
-    setBranches(getBranches());
+    getBranches().then((branchList) => setBranches(branchList));
     setIsAddDialogOpen(false);
     // Reset form
     setNewBranch({

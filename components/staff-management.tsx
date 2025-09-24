@@ -82,8 +82,8 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    setStaff(getStaff());
-    setBranches(getBranches());
+    getStaff().then((staffList) => setStaff(staffList));
+    getBranches().then((branchList) => setBranches(branchList));
   }, []);
 
   const canManageStaff =
@@ -96,7 +96,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     if (!hasPermission(currentUser, "staff.create")) return;
 
     const staffMember = addStaff(newStaff);
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
     setNewStaff({
       name: "",
       phone: "",
@@ -117,7 +117,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
       designation: selectedStaff.designation,
       branchId: selectedStaff.branchId,
     });
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
     setIsEditDialogOpen(false);
     setSelectedStaff(null);
   };
@@ -126,7 +126,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     if (!selectedStaff || !canResetPasswords) return;
 
     updateStaffPassword(selectedStaff.id, newPassword, currentUser.name || "");
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
     setNewPassword("");
     setIsPasswordDialogOpen(false);
     setSelectedStaff(null);
@@ -136,7 +136,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     if (!hasPermission(currentUser, "staff.permissions")) return;
 
     updateStaffRole(staffId, newRole, currentUser.name || "");
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
   };
 
   const handleToggleActive = (staffId: string, isActive: boolean) => {
@@ -147,7 +147,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     } else {
       activateStaff(staffId, currentUser.name || "");
     }
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
   };
 
   const handleDeleteStaff = (staffId: string) => {
@@ -155,7 +155,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
 
     const success = deleteStaff(staffId);
     if (success) {
-      setStaff(getStaff());
+      getStaff().then((staffList) => setStaff(staffList));
     }
   };
 

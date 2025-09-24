@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -31,6 +31,7 @@ import { DocumentManager } from "@/components/document-requirements";
 import { getBranches } from "@/services/branch-service";
 import { addLead } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
+import { Branch } from "@/types/common";
 
 interface DocumentStatus {
   type: string;
@@ -105,9 +106,8 @@ export default function AddLeadPage() {
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const branches = getBranches();
-  const branch = branches.find((b) => b.id === branchId);
-  const staff = getStaff();
+  const [branch, setBranch] = useState();
+  const [staff, setStaff] = useState();
 
   const banks = [
     "State Bank of India (SBI)",
@@ -220,6 +220,14 @@ export default function AddLeadPage() {
       setCustomInputs((prev) => ({ ...prev, [field]: "" }));
     }
   };
+
+  useEffect(() => {
+    getBranches().then((branches) => {
+      const currentBranch: Branch = branches.find((b) => b.id === branchId);
+      setBranch(currentBranch);
+    });
+    getStaff().then((staffList) => setStaff(staffList));
+  }, []);
 
   if (!user || user.type !== "official" || !branch) {
     return <div>Loading...</div>;

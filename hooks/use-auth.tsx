@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string
   ): Promise<boolean> => {
     try {
-      const authenticatedUser = authenticateUser(username, password);
+      const authenticatedUser = await authenticateUser(username, password);
       if (authenticatedUser) {
         setUser(authenticatedUser);
         if (typeof window !== "undefined") {
