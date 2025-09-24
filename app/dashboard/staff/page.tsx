@@ -1,55 +1,75 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Plus, Search, Edit, Trash2, UserMinus, Bell, ArrowLeft } from "lucide-react"
-import { getStaff, deleteStaff, type User } from "@/lib/auth"
-import Image from "next/image"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Users,
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  UserMinus,
+  Bell,
+  ArrowLeft,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { getStaff, deleteStaff } from "@/services/staff-service";
+import { User } from "@/types/common";
 
 export default function StaffManagementPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const [staff, setStaff] = useState<User[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedDesignation, setSelectedDesignation] = useState("all")
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [staff, setStaff] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDesignation, setSelectedDesignation] = useState("all");
 
   useEffect(() => {
     if (!user || user.type !== "official") {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    setStaff(getStaff())
-  }, [user, router])
+    setStaff(getStaff());
+  }, [user, router]);
 
   const handleDeleteStaff = (staffId: string) => {
     if (confirm("Are you sure you want to delete this staff member?")) {
       if (deleteStaff(staffId)) {
-        setStaff(getStaff())
+        setStaff(getStaff());
       }
     }
-  }
+  };
 
   const filteredStaff = staff.filter((member) => {
     const matchesSearch =
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.phone?.includes(searchTerm) ||
-      member.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesDesignation = selectedDesignation === "all" || member.designation === selectedDesignation
-    return matchesSearch && matchesDesignation
-  })
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDesignation =
+      selectedDesignation === "all" ||
+      member.designation === selectedDesignation;
+    return matchesSearch && matchesDesignation;
+  });
 
-  const designations = [...new Set(staff.map((s) => s.designation).filter(Boolean))]
+  const designations = [
+    ...new Set(staff.map((s) => s.designation).filter(Boolean)),
+  ];
 
   if (!user || user.type !== "official") {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   return (
@@ -73,7 +93,9 @@ export default function StaffManagementPage() {
             />
             <div>
               <h1 className="text-xl font-semibold">Staff Management</h1>
-              <p className="text-sm text-muted-foreground">Manage your team members</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your team members
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -106,7 +128,9 @@ export default function StaffManagementPage() {
                   <Users className="h-5 w-5" />
                   Staff Directory
                 </CardTitle>
-                <CardDescription>View and manage all staff members</CardDescription>
+                <CardDescription>
+                  View and manage all staff members
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {/* Search and Filter */}
@@ -138,7 +162,10 @@ export default function StaffManagementPage() {
                 <div className="space-y-4">
                   {filteredStaff.length > 0 ? (
                     filteredStaff.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                             {member.photo ? (
@@ -155,8 +182,12 @@ export default function StaffManagementPage() {
                           </div>
                           <div>
                             <h4 className="font-medium">{member.name}</h4>
-                            <p className="text-sm text-muted-foreground">{member.email}</p>
-                            <p className="text-sm text-muted-foreground">{member.phone}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {member.email}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {member.phone}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -172,7 +203,9 @@ export default function StaffManagementPage() {
                   ) : (
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No staff members found</p>
+                      <p className="text-muted-foreground">
+                        No staff members found
+                      </p>
                     </div>
                   )}
                 </div>
@@ -185,8 +218,12 @@ export default function StaffManagementPage() {
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-8 text-center">
                   <Plus className="h-12 w-12 mx-auto mb-4 text-primary" />
-                  <h3 className="text-xl font-semibold mb-2">Add New Staff Member</h3>
-                  <p className="text-muted-foreground">Click here to register a new employee</p>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Add New Staff Member
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Click here to register a new employee
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -199,12 +236,16 @@ export default function StaffManagementPage() {
                   <UserMinus className="h-5 w-5" />
                   Staff Resignations
                 </CardTitle>
-                <CardDescription>Manage resignation requests and process departures</CardDescription>
+                <CardDescription>
+                  Manage resignation requests and process departures
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
                   <UserMinus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No resignation requests at this time</p>
+                  <p className="text-muted-foreground">
+                    No resignation requests at this time
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -217,23 +258,34 @@ export default function StaffManagementPage() {
                   <Trash2 className="h-5 w-5 text-destructive" />
                   Delete Staff Members
                 </CardTitle>
-                <CardDescription>Permanently remove staff members from the system</CardDescription>
+                <CardDescription>
+                  Permanently remove staff members from the system
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {staff.length > 0 ? (
                     staff.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                             <Users className="h-6 w-6 text-primary" />
                           </div>
                           <div>
                             <h4 className="font-medium">{member.name}</h4>
-                            <p className="text-sm text-muted-foreground">{member.designation}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {member.designation}
+                            </p>
                           </div>
                         </div>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteStaff(member.id)}>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteStaff(member.id)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
@@ -242,7 +294,9 @@ export default function StaffManagementPage() {
                   ) : (
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No staff members to delete</p>
+                      <p className="text-muted-foreground">
+                        No staff members to delete
+                      </p>
                     </div>
                   )}
                 </div>
@@ -252,5 +306,5 @@ export default function StaffManagementPage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

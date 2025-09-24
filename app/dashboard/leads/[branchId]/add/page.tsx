@@ -1,35 +1,50 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter, useParams } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, TrendingUp, Bell, Upload, FileText, Calendar } from "lucide-react"
-import { addLead, getBranches, getStaff } from "@/lib/auth"
-import Image from "next/image"
-import Link from "next/link"
-import { DocumentManager } from "@/components/document-requirements"
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter, useParams } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  ArrowLeft,
+  TrendingUp,
+  Bell,
+  Upload,
+  FileText,
+  Calendar,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { DocumentManager } from "@/components/document-requirements";
+import { getBranches } from "@/services/branch-service";
+import { addLead } from "@/services/lead-service";
+import { getStaff } from "@/services/staff-service";
 
 interface DocumentStatus {
-  type: string
-  status: "Pending" | "Provided" | "Verified"
-  files: File[]
-  additionalFiles: File[]
-  notes: string
+  type: string;
+  status: "Pending" | "Provided" | "Verified";
+  files: File[];
+  additionalFiles: File[];
+  notes: string;
 }
 
 export default function AddLeadPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const params = useParams()
-  const branchId = params.branchId as string
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const branchId = params.branchId as string;
 
   const [formData, setFormData] = useState({
     // Basic Lead Information
@@ -52,7 +67,11 @@ export default function AddLeadPage() {
     cibilScore: "",
 
     // Application Status
-    applicationStatus: "Login" as "Login" | "Pending" | "Sanctioned" | "Rejected",
+    applicationStatus: "Login" as
+      | "Login"
+      | "Pending"
+      | "Sanctioned"
+      | "Rejected",
 
     // Bank Assignment
     selectedBank: "",
@@ -62,7 +81,7 @@ export default function AddLeadPage() {
     // Additional Information
     additionalInfo: "",
     remarks: "",
-  })
+  });
 
   const [customInputs, setCustomInputs] = useState({
     leadSource: "",
@@ -70,7 +89,7 @@ export default function AddLeadPage() {
     selectedBank: "",
     assignedStaff: "",
     ownerManagerAssignment: "",
-  })
+  });
 
   const [showCustomInput, setShowCustomInput] = useState({
     leadSource: false,
@@ -78,17 +97,17 @@ export default function AddLeadPage() {
     selectedBank: false,
     assignedStaff: false,
     ownerManagerAssignment: false,
-  })
+  });
 
-  const [bankDocuments, setBankDocuments] = useState<File[]>([])
-  const [loanDocuments, setLoanDocuments] = useState<any[]>([])
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [bankDocuments, setBankDocuments] = useState<File[]>([]);
+  const [loanDocuments, setLoanDocuments] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const branches = getBranches()
-  const branch = branches.find((b) => b.id === branchId)
-  const staff = getStaff()
+  const branches = getBranches();
+  const branch = branches.find((b) => b.id === branchId);
+  const staff = getStaff();
 
   const banks = [
     "State Bank of India (SBI)",
@@ -99,7 +118,7 @@ export default function AddLeadPage() {
     "Bank of Baroda",
     "Axis Bank",
     "Kotak Mahindra Bank",
-  ]
+  ];
 
   const productTypes = [
     "Home Loan",
@@ -110,7 +129,7 @@ export default function AddLeadPage() {
     "Credit Card",
     "Insurance",
     "Investment Products",
-  ]
+  ];
 
   const leadSources = [
     "Social Media",
@@ -122,33 +141,38 @@ export default function AddLeadPage() {
     "Website",
     "Cold Call",
     "Email Campaign",
-  ]
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Login":
-        return "bg-blue-500"
+        return "bg-blue-500";
       case "Pending":
-        return "bg-orange-500"
+        return "bg-orange-500";
       case "Sanctioned":
-        return "bg-green-500"
+        return "bg-green-500";
       case "Rejected":
-        return "bg-red-500"
+        return "bg-red-500";
       default:
-        return "bg-gray-500"
+        return "bg-gray-500";
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      if (!formData.leadName || !formData.clientName || !formData.contactNumber || !formData.leadType) {
-        setError("Please fill in all required fields")
-        return
+      if (
+        !formData.leadName ||
+        !formData.clientName ||
+        !formData.contactNumber ||
+        !formData.leadType
+      ) {
+        setError("Please fill in all required fields");
+        return;
       }
 
       const newLead = addLead({
@@ -160,43 +184,45 @@ export default function AddLeadPage() {
         bankDocuments: bankDocuments,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      })
+      });
 
-      setSuccess("Lead created successfully with loan-specific document tracking!")
+      setSuccess(
+        "Lead created successfully with loan-specific document tracking!"
+      );
       setTimeout(() => {
-        router.push(`/dashboard/leads/${branchId}`)
-      }, 2000)
+        router.push(`/dashboard/leads/${branchId}`);
+      }, 2000);
     } catch (err) {
-      setError("Failed to create lead. Please try again.")
+      setError("Failed to create lead. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleCustomSelection = (field: string, value: string) => {
     if (value === "custom") {
-      setShowCustomInput((prev) => ({ ...prev, [field]: true }))
+      setShowCustomInput((prev) => ({ ...prev, [field]: true }));
     } else {
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      handleInputChange(field, value)
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      handleInputChange(field, value);
     }
-  }
+  };
 
   const handleCustomInputSubmit = (field: string) => {
-    const customValue = customInputs[field as keyof typeof customInputs]
+    const customValue = customInputs[field as keyof typeof customInputs];
     if (customValue.trim()) {
-      handleInputChange(field, customValue)
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      setCustomInputs((prev) => ({ ...prev, [field]: "" }))
+      handleInputChange(field, customValue);
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      setCustomInputs((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   if (!user || user.type !== "official" || !branch) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   return (
@@ -219,8 +245,12 @@ export default function AddLeadPage() {
               className="rounded-lg"
             />
             <div>
-              <h1 className="text-xl font-semibold">Create New Lead - {branch.name}</h1>
-              <p className="text-sm text-muted-foreground">Comprehensive lead creation with document tracking</p>
+              <h1 className="text-xl font-semibold">
+                Create New Lead - {branch.name}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Comprehensive lead creation with document tracking
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -246,7 +276,9 @@ export default function AddLeadPage() {
                 <TrendingUp className="h-5 w-5" />
                 1️⃣ New Lead Creation
               </CardTitle>
-              <CardDescription>Basic lead information and assignment</CardDescription>
+              <CardDescription>
+                Basic lead information and assignment
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,7 +289,9 @@ export default function AddLeadPage() {
                     type="text"
                     placeholder="Enter lead name/reference"
                     value={formData.leadName}
-                    onChange={(e) => handleInputChange("leadName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("leadName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -268,7 +302,9 @@ export default function AddLeadPage() {
                     type="tel"
                     placeholder="Enter contact number"
                     value={formData.contactNumber}
-                    onChange={(e) => handleInputChange("contactNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contactNumber", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -282,15 +318,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom lead source"
                         value={customInputs.leadSource}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, leadSource: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            leadSource: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("leadSource")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("leadSource")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, leadSource: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            leadSource: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -300,7 +350,9 @@ export default function AddLeadPage() {
                     <select
                       id="leadSource"
                       value={formData.leadSource}
-                      onChange={(e) => handleCustomSelection("leadSource", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection("leadSource", e.target.value)
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                       required
                     >
@@ -321,15 +373,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom product type"
                         value={customInputs.leadType}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, leadType: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            leadType: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("leadType")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("leadType")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, leadType: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            leadType: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -339,7 +405,9 @@ export default function AddLeadPage() {
                     <select
                       id="leadType"
                       value={formData.leadType}
-                      onChange={(e) => handleCustomSelection("leadType", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection("leadType", e.target.value)
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                       required
                     >
@@ -363,15 +431,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom staff member"
                         value={customInputs.assignedStaff}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, assignedStaff: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            assignedStaff: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("assignedStaff")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("assignedStaff")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, assignedStaff: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            assignedStaff: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -381,7 +463,9 @@ export default function AddLeadPage() {
                     <select
                       id="assignedStaff"
                       value={formData.assignedStaff}
-                      onChange={(e) => handleCustomSelection("assignedStaff", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection("assignedStaff", e.target.value)
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                     >
                       <option value="">Select staff member</option>
@@ -395,23 +479,39 @@ export default function AddLeadPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ownerManagerAssignment">Owner/Manager Assignment</Label>
+                  <Label htmlFor="ownerManagerAssignment">
+                    Owner/Manager Assignment
+                  </Label>
                   {showCustomInput.ownerManagerAssignment ? (
                     <div className="flex gap-2">
                       <Input
                         placeholder="Enter custom owner/manager"
                         value={customInputs.ownerManagerAssignment}
                         onChange={(e) =>
-                          setCustomInputs((prev) => ({ ...prev, ownerManagerAssignment: e.target.value }))
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            ownerManagerAssignment: e.target.value,
+                          }))
                         }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("ownerManagerAssignment")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          handleCustomInputSubmit("ownerManagerAssignment")
+                        }
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, ownerManagerAssignment: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            ownerManagerAssignment: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -421,13 +521,20 @@ export default function AddLeadPage() {
                     <select
                       id="ownerManagerAssignment"
                       value={formData.ownerManagerAssignment}
-                      onChange={(e) => handleCustomSelection("ownerManagerAssignment", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection(
+                          "ownerManagerAssignment",
+                          e.target.value
+                        )
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                     >
                       <option value="">Select owner/manager</option>
                       {staff
                         .filter(
-                          (member) => member.designation.includes("Manager") || member.designation.includes("Owner"),
+                          (member) =>
+                            member.designation.includes("Manager") ||
+                            member.designation.includes("Owner")
                         )
                         .map((member) => (
                           <option key={member.id} value={member.name}>
@@ -449,7 +556,9 @@ export default function AddLeadPage() {
                 <FileText className="h-5 w-5" />
                 2️⃣ Customer Basic Information
               </CardTitle>
-              <CardDescription>Detailed customer information and documents</CardDescription>
+              <CardDescription>
+                Detailed customer information and documents
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -460,7 +569,9 @@ export default function AddLeadPage() {
                     type="text"
                     placeholder="Enter customer full name"
                     value={formData.clientName}
-                    onChange={(e) => handleInputChange("clientName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("clientName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -470,7 +581,9 @@ export default function AddLeadPage() {
                     id="dateOfBirth"
                     type="date"
                     value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("dateOfBirth", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -493,7 +606,9 @@ export default function AddLeadPage() {
                     type="number"
                     placeholder="Enter CIBIL score"
                     value={formData.cibilScore}
-                    onChange={(e) => handleInputChange("cibilScore", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("cibilScore", e.target.value)
+                    }
                     min="300"
                     max="900"
                   />
@@ -518,7 +633,8 @@ export default function AddLeadPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                3️⃣ Document Requirements - {formData.leadType || "Select Loan Type"}
+                3️⃣ Document Requirements -{" "}
+                {formData.leadType || "Select Loan Type"}
               </CardTitle>
               <CardDescription>
                 {formData.leadType
@@ -536,7 +652,10 @@ export default function AddLeadPage() {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-4" />
-                  <p>Select a loan type above to see specific document requirements</p>
+                  <p>
+                    Select a loan type above to see specific document
+                    requirements
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -549,7 +668,9 @@ export default function AddLeadPage() {
                 <TrendingUp className="h-5 w-5" />
                 4️⃣ Bank & Branch Assignment
               </CardTitle>
-              <CardDescription>Assign to specific bank and upload bank-specific documents</CardDescription>
+              <CardDescription>
+                Assign to specific bank and upload bank-specific documents
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -560,15 +681,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom bank name"
                         value={customInputs.selectedBank}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, selectedBank: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            selectedBank: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("selectedBank")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("selectedBank")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, selectedBank: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            selectedBank: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -578,7 +713,9 @@ export default function AddLeadPage() {
                     <select
                       id="selectedBank"
                       value={formData.selectedBank}
-                      onChange={(e) => handleCustomSelection("selectedBank", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection("selectedBank", e.target.value)
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                     >
                       <option value="">Select bank</option>
@@ -598,7 +735,9 @@ export default function AddLeadPage() {
                     type="text"
                     placeholder="Enter bank branch name"
                     value={formData.bankBranch}
-                    onChange={(e) => handleInputChange("bankBranch", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("bankBranch", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -611,7 +750,9 @@ export default function AddLeadPage() {
                     type="text"
                     placeholder="Enter bank staff contact person"
                     value={formData.bankStaff}
-                    onChange={(e) => handleInputChange("bankStaff", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("bankStaff", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -619,7 +760,11 @@ export default function AddLeadPage() {
                   <Input
                     type="file"
                     multiple
-                    onChange={(e) => setBankDocuments(e.target.files ? Array.from(e.target.files) : [])}
+                    onChange={(e) =>
+                      setBankDocuments(
+                        e.target.files ? Array.from(e.target.files) : []
+                      )
+                    }
                     className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-accent-foreground hover:file:bg-accent/80"
                   />
                 </div>
@@ -634,26 +779,36 @@ export default function AddLeadPage() {
                 <Calendar className="h-5 w-5" />
                 5️⃣ Application Status Flow
               </CardTitle>
-              <CardDescription>Set initial application status with color coding</CardDescription>
+              <CardDescription>
+                Set initial application status with color coding
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {["Login", "Pending", "Sanctioned", "Rejected"].map((status) => (
-                  <div
-                    key={status}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      formData.applicationStatus === status
-                        ? "border-primary bg-primary/10"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => handleInputChange("applicationStatus", status as any)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(status)}`}></div>
-                      <span className="font-medium">{status}</span>
+                {["Login", "Pending", "Sanctioned", "Rejected"].map(
+                  (status) => (
+                    <div
+                      key={status}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        formData.applicationStatus === status
+                          ? "border-primary bg-primary/10"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() =>
+                        handleInputChange("applicationStatus", status as any)
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getStatusColor(
+                            status
+                          )}`}
+                        ></div>
+                        <span className="font-medium">{status}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
               <div className="space-y-2">
@@ -691,7 +846,9 @@ export default function AddLeadPage() {
                   id="additionalInfo"
                   placeholder="Enter any additional information about the lead"
                   value={formData.additionalInfo}
-                  onChange={(e) => handleInputChange("additionalInfo", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("additionalInfo", e.target.value)
+                  }
                   rows={4}
                 />
               </div>
@@ -712,7 +869,9 @@ export default function AddLeadPage() {
 
           <div className="flex gap-4">
             <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? "Creating Lead..." : "Create Lead with Loan-Specific Documents"}
+              {isLoading
+                ? "Creating Lead..."
+                : "Create Lead with Loan-Specific Documents"}
             </Button>
             <Link href={`/dashboard/leads/${branchId}`}>
               <Button type="button" variant="outline">
@@ -723,5 +882,5 @@ export default function AddLeadPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

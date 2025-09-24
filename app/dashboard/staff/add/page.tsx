@@ -1,24 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Users, Bell } from "lucide-react"
-import { addStaff, getBranches } from "@/lib/auth"
-import Image from "next/image"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Users, Bell } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { getBranches } from "@/services/branch-service";
+import { addStaff } from "@/services/staff-service";
 
 export default function AddStaffPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const [branches, setBranches] = useState<any[]>([])
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [branches, setBranches] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -27,40 +34,46 @@ export default function AddStaffPage() {
     email: "",
     photo: "",
     branchId: "",
-  })
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const branchList = getBranches()
-    setBranches(branchList)
+    const branchList = getBranches();
+    setBranches(branchList);
     if (branchList.length > 0) {
-      setFormData((prev) => ({ ...prev, branchId: branchList[0].id }))
+      setFormData((prev) => ({ ...prev, branchId: branchList[0].id }));
     }
-  }, [])
+  }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setPhotoFile(file)
+      setPhotoFile(file);
       // Create a temporary URL for preview
-      const photoUrl = URL.createObjectURL(file)
-      setFormData((prev) => ({ ...prev, photo: photoUrl }))
+      const photoUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, photo: photoUrl }));
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      if (!formData.name || !formData.phone || !formData.password || !formData.designation || !formData.email) {
-        setError("Please fill in all required fields")
-        return
+      if (
+        !formData.name ||
+        !formData.phone ||
+        !formData.password ||
+        !formData.designation ||
+        !formData.email
+      ) {
+        setError("Please fill in all required fields");
+        return;
       }
 
       const newStaff = addStaff({
@@ -71,26 +84,26 @@ export default function AddStaffPage() {
         designation: formData.designation,
         photo: formData.photo,
         branchId: formData.branchId,
-      })
+      });
 
-      setSuccess("Staff member added successfully!")
+      setSuccess("Staff member added successfully!");
       setTimeout(() => {
-        router.push("/dashboard/staff")
-      }, 2000)
+        router.push("/dashboard/staff");
+      }, 2000);
     } catch (err) {
-      setError("Failed to add staff member. Please try again.")
+      setError("Failed to add staff member. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   if (!user || user.type !== "official") {
-    router.push("/")
-    return <div>Loading...</div>
+    router.push("/");
+    return <div>Loading...</div>;
   }
 
   return (
@@ -114,7 +127,9 @@ export default function AddStaffPage() {
             />
             <div>
               <h1 className="text-xl font-semibold">Add New Staff</h1>
-              <p className="text-sm text-muted-foreground">Register a new employee</p>
+              <p className="text-sm text-muted-foreground">
+                Register a new employee
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -138,7 +153,9 @@ export default function AddStaffPage() {
               <Users className="h-5 w-5" />
               Staff Registration Form
             </CardTitle>
-            <CardDescription>Fill in the details to add a new staff member</CardDescription>
+            <CardDescription>
+              Fill in the details to add a new staff member
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -186,7 +203,9 @@ export default function AddStaffPage() {
                     type="text"
                     placeholder="Enter designation"
                     value={formData.designation}
-                    onChange={(e) => handleInputChange("designation", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("designation", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -199,7 +218,9 @@ export default function AddStaffPage() {
                   type="password"
                   placeholder="Enter password for employee login"
                   value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -209,7 +230,9 @@ export default function AddStaffPage() {
                 <select
                   id="branch"
                   value={formData.branchId}
-                  onChange={(e) => handleInputChange("branchId", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("branchId", e.target.value)
+                  }
                   className="w-full px-3 py-2 border rounded-md bg-background"
                 >
                   {branches.map((branch) => (
@@ -244,7 +267,9 @@ export default function AddStaffPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">Upload a photo for the staff member</p>
+                <p className="text-xs text-muted-foreground">
+                  Upload a photo for the staff member
+                </p>
               </div>
 
               {error && (
@@ -274,5 +299,5 @@ export default function AddStaffPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

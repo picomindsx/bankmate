@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,39 +18,57 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, Shield, Key, UserPlus, Eye, EyeOff, Crown, Building, Users, UserCheck, Trash2 } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
-  type User as UserType,
-  addStaff,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  User,
+  Shield,
+  Key,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Crown,
+  Building,
+  Users,
+  UserCheck,
+  Trash2,
+} from "lucide-react";
+import { hasPermission } from "@/services/auth-service";
+import { getBranches } from "@/services/branch-service";
+import {
   getStaff,
+  addStaff,
   updateStaff,
   updateStaffPassword,
   updateStaffRole,
   deactivateStaff,
   activateStaff,
-  hasPermission,
-  getBranches,
   deleteStaff,
-} from "@/lib/auth"
+} from "@/services/staff-service";
+import { User as UserType } from "@/types/common";
 
 interface StaffManagementProps {
-  currentUser: UserType
+  currentUser: UserType;
 }
 
 export default function StaffManagement({ currentUser }: StaffManagementProps) {
-  const [staff, setStaff] = useState<UserType[]>([])
-  const [branches, setBranches] = useState<any[]>([])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-  const [selectedStaff, setSelectedStaff] = useState<UserType | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterRole, setFilterRole] = useState("all")
-  const [filterBranch, setFilterBranch] = useState("all")
-  const [filterStatus, setFilterStatus] = useState("all")
+  const [staff, setStaff] = useState<UserType[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<UserType | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterBranch, setFilterBranch] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const [newStaff, setNewStaff] = useState({
     name: "",
@@ -53,24 +77,26 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     role: "staff" as UserType["role"],
     branchId: "",
     designation: "",
-  })
+  });
 
-  const [newPassword, setNewPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    setStaff(getStaff())
-    setBranches(getBranches())
-  }, [])
+    setStaff(getStaff());
+    setBranches(getBranches());
+  }, []);
 
-  const canManageStaff = hasPermission(currentUser, "staff.create") || hasPermission(currentUser, "staff.edit")
-  const canResetPasswords = hasPermission(currentUser, "staff.password_reset")
-  const canDeleteStaff = hasPermission(currentUser, "staff.delete")
+  const canManageStaff =
+    hasPermission(currentUser, "staff.create") ||
+    hasPermission(currentUser, "staff.edit");
+  const canResetPasswords = hasPermission(currentUser, "staff.password_reset");
+  const canDeleteStaff = hasPermission(currentUser, "staff.delete");
 
   const handleAddStaff = () => {
-    if (!hasPermission(currentUser, "staff.create")) return
+    if (!hasPermission(currentUser, "staff.create")) return;
 
-    const staffMember = addStaff(newStaff)
-    setStaff(getStaff())
+    const staffMember = addStaff(newStaff);
+    setStaff(getStaff());
     setNewStaff({
       name: "",
       phone: "",
@@ -78,109 +104,110 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
       role: "staff",
       branchId: "",
       designation: "",
-    })
-    setIsAddDialogOpen(false)
-  }
+    });
+    setIsAddDialogOpen(false);
+  };
 
   const handleUpdateStaff = () => {
-    if (!selectedStaff || !hasPermission(currentUser, "staff.edit")) return
+    if (!selectedStaff || !hasPermission(currentUser, "staff.edit")) return;
 
     updateStaff(selectedStaff.id, {
       name: selectedStaff.name,
       email: selectedStaff.email,
       designation: selectedStaff.designation,
       branchId: selectedStaff.branchId,
-    })
-    setStaff(getStaff())
-    setIsEditDialogOpen(false)
-    setSelectedStaff(null)
-  }
+    });
+    setStaff(getStaff());
+    setIsEditDialogOpen(false);
+    setSelectedStaff(null);
+  };
 
   const handlePasswordReset = () => {
-    if (!selectedStaff || !canResetPasswords) return
+    if (!selectedStaff || !canResetPasswords) return;
 
-    updateStaffPassword(selectedStaff.id, newPassword, currentUser.name || "")
-    setStaff(getStaff())
-    setNewPassword("")
-    setIsPasswordDialogOpen(false)
-    setSelectedStaff(null)
-  }
+    updateStaffPassword(selectedStaff.id, newPassword, currentUser.name || "");
+    setStaff(getStaff());
+    setNewPassword("");
+    setIsPasswordDialogOpen(false);
+    setSelectedStaff(null);
+  };
 
   const handleRoleChange = (staffId: string, newRole: UserType["role"]) => {
-    if (!hasPermission(currentUser, "staff.permissions")) return
+    if (!hasPermission(currentUser, "staff.permissions")) return;
 
-    updateStaffRole(staffId, newRole, currentUser.name || "")
-    setStaff(getStaff())
-  }
+    updateStaffRole(staffId, newRole, currentUser.name || "");
+    setStaff(getStaff());
+  };
 
   const handleToggleActive = (staffId: string, isActive: boolean) => {
-    if (!canDeleteStaff) return
+    if (!canDeleteStaff) return;
 
     if (isActive) {
-      deactivateStaff(staffId, currentUser.name || "")
+      deactivateStaff(staffId, currentUser.name || "");
     } else {
-      activateStaff(staffId, currentUser.name || "")
+      activateStaff(staffId, currentUser.name || "");
     }
-    setStaff(getStaff())
-  }
+    setStaff(getStaff());
+  };
 
   const handleDeleteStaff = (staffId: string) => {
-    if (!canDeleteStaff) return
+    if (!canDeleteStaff) return;
 
-    const success = deleteStaff(staffId)
+    const success = deleteStaff(staffId);
     if (success) {
-      setStaff(getStaff())
+      setStaff(getStaff());
     }
-  }
+  };
 
   const filteredStaff = staff.filter((member) => {
     const matchesSearch =
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.phone?.includes(searchTerm) ||
-      member.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = filterRole === "all" || member.role === filterRole
-    const matchesBranch = filterBranch === "all" || member.branchId === filterBranch
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === "all" || member.role === filterRole;
+    const matchesBranch =
+      filterBranch === "all" || member.branchId === filterBranch;
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "active" && member.isActive) ||
-      (filterStatus === "inactive" && !member.isActive)
+      (filterStatus === "inactive" && !member.isActive);
 
-    return matchesSearch && matchesRole && matchesBranch && matchesStatus
-  })
+    return matchesSearch && matchesRole && matchesBranch && matchesStatus;
+  });
 
   const getRoleIcon = (role: UserType["role"]) => {
     switch (role) {
       case "owner":
-        return <Crown className="h-4 w-4 text-yellow-500" />
+        return <Crown className="h-4 w-4 text-yellow-500" />;
       case "branch_head":
-        return <Building className="h-4 w-4 text-purple-500" />
+        return <Building className="h-4 w-4 text-purple-500" />;
       case "manager":
-        return <Users className="h-4 w-4 text-blue-500" />
+        return <Users className="h-4 w-4 text-blue-500" />;
       case "admin":
-        return <Shield className="h-4 w-4 text-red-500" />
+        return <Shield className="h-4 w-4 text-red-500" />;
       case "staff":
-        return <User className="h-4 w-4 text-green-500" />
+        return <User className="h-4 w-4 text-green-500" />;
       default:
-        return <User className="h-4 w-4" />
+        return <User className="h-4 w-4" />;
     }
-  }
+  };
 
   const getRoleBadgeColor = (role: UserType["role"]) => {
     switch (role) {
       case "owner":
-        return "bg-yellow-500"
+        return "bg-yellow-500";
       case "branch_head":
-        return "bg-purple-500"
+        return "bg-purple-500";
       case "manager":
-        return "bg-blue-500"
+        return "bg-blue-500";
       case "admin":
-        return "bg-red-500"
+        return "bg-red-500";
       case "staff":
-        return "bg-green-500"
+        return "bg-green-500";
       default:
-        return "bg-gray-500"
+        return "bg-gray-500";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -188,26 +215,36 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="bg-white/10 backdrop-blur-xl border-white/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Total Staff</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">
+              Total Staff
+            </CardTitle>
             <Users className="h-4 w-4 text-white" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{staff.length}</div>
-            {staff.length === 0 && <p className="text-xs text-gray-400 mt-1">No staff members yet</p>}
+            {staff.length === 0 && (
+              <p className="text-xs text-gray-400 mt-1">No staff members yet</p>
+            )}
           </CardContent>
         </Card>
         <Card className="bg-white/10 backdrop-blur-xl border-white/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">
+              Active
+            </CardTitle>
             <UserCheck className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">{staff.filter((s) => s.isActive).length}</div>
+            <div className="text-2xl font-bold text-green-400">
+              {staff.filter((s) => s.isActive).length}
+            </div>
           </CardContent>
         </Card>
         <Card className="bg-white/10 backdrop-blur-xl border-white/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Branch Heads</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">
+              Branch Heads
+            </CardTitle>
             <Building className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
@@ -218,20 +255,28 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
         </Card>
         <Card className="bg-white/10 backdrop-blur-xl border-white/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Managers</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">
+              Managers
+            </CardTitle>
             <Users className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-400">{staff.filter((s) => s.role === "manager").length}</div>
+            <div className="text-2xl font-bold text-blue-400">
+              {staff.filter((s) => s.role === "manager").length}
+            </div>
           </CardContent>
         </Card>
         <Card className="bg-white/10 backdrop-blur-xl border-white/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Admins</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">
+              Admins
+            </CardTitle>
             <Shield className="h-4 w-4 text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-400">{staff.filter((s) => s.role === "admin").length}</div>
+            <div className="text-2xl font-bold text-red-400">
+              {staff.filter((s) => s.role === "admin").length}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -242,7 +287,8 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
             <div>
               <CardTitle className="text-white">Staff Management</CardTitle>
               <CardDescription className="text-gray-300">
-                Manage staff members with employer login access and lead generation capabilities
+                Manage staff members with employer login access and lead
+                generation capabilities
               </CardDescription>
             </div>
             {canManageStaff && (
@@ -255,9 +301,12 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                 </DialogTrigger>
                 <DialogContent className="bg-gray-900 border-gray-700">
                   <DialogHeader>
-                    <DialogTitle className="text-white">Add New Staff Member</DialogTitle>
+                    <DialogTitle className="text-white">
+                      Add New Staff Member
+                    </DialogTitle>
                     <DialogDescription className="text-gray-300">
-                      Create a new staff account with appropriate role and permissions
+                      Create a new staff account with appropriate role and
+                      permissions
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
@@ -268,7 +317,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       <Input
                         id="name"
                         value={newStaff.name}
-                        onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                        onChange={(e) =>
+                          setNewStaff({ ...newStaff, name: e.target.value })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                       />
                     </div>
@@ -279,7 +330,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       <Input
                         id="phone"
                         value={newStaff.phone}
-                        onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
+                        onChange={(e) =>
+                          setNewStaff({ ...newStaff, phone: e.target.value })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                       />
                     </div>
@@ -291,7 +344,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                         id="email"
                         type="email"
                         value={newStaff.email}
-                        onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                        onChange={(e) =>
+                          setNewStaff({ ...newStaff, email: e.target.value })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                       />
                     </div>
@@ -301,7 +356,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       </Label>
                       <Select
                         value={newStaff.role}
-                        onValueChange={(value: UserType["role"]) => setNewStaff({ ...newStaff, role: value })}
+                        onValueChange={(value: UserType["role"]) =>
+                          setNewStaff({ ...newStaff, role: value })
+                        }
                       >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue />
@@ -310,7 +367,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                           <SelectItem value="staff">Staff</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                           <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="branch_head">Branch Head</SelectItem>
+                          <SelectItem value="branch_head">
+                            Branch Head
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -320,7 +379,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       </Label>
                       <Select
                         value={newStaff.branchId}
-                        onValueChange={(value) => setNewStaff({ ...newStaff, branchId: value })}
+                        onValueChange={(value) =>
+                          setNewStaff({ ...newStaff, branchId: value })
+                        }
                       >
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue />
@@ -341,11 +402,19 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       <Input
                         id="designation"
                         value={newStaff.designation}
-                        onChange={(e) => setNewStaff({ ...newStaff, designation: e.target.value })}
+                        onChange={(e) =>
+                          setNewStaff({
+                            ...newStaff,
+                            designation: e.target.value,
+                          })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                       />
                     </div>
-                    <Button onClick={handleAddStaff} className="w-full bg-gradient-to-r from-blue-500 to-purple-600">
+                    <Button
+                      onClick={handleAddStaff}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+                    >
                       Add Staff Member
                     </Button>
                   </div>
@@ -406,10 +475,12 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
             {filteredStaff.length === 0 && (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No Staff Members</h3>
+                <h3 className="text-lg font-medium text-white mb-2">
+                  No Staff Members
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  All previous staff have been cleared. Add new staff members who can access employer login and generate
-                  leads.
+                  All previous staff have been cleared. Add new staff members
+                  who can access employer login and generate leads.
                 </p>
                 {canManageStaff && (
                   <Button
@@ -441,10 +512,20 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       <span>{member.designation}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge className={`${getRoleBadgeColor(member.role)} text-white border-0`}>
-                        {member.role ? member.role.replace(/_/g, " ").toUpperCase() : "NO ROLE"}
+                      <Badge
+                        className={`${getRoleBadgeColor(
+                          member.role
+                        )} text-white border-0`}
+                      >
+                        {member.role
+                          ? member.role.replace(/_/g, " ").toUpperCase()
+                          : "NO ROLE"}
                       </Badge>
-                      <Badge className={`${member.isActive ? "bg-green-500" : "bg-red-500"} text-white border-0`}>
+                      <Badge
+                        className={`${
+                          member.isActive ? "bg-green-500" : "bg-red-500"
+                        } text-white border-0`}
+                      >
                         {member.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
@@ -454,7 +535,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                   {hasPermission(currentUser, "staff.permissions") && (
                     <Select
                       value={member.role}
-                      onValueChange={(value: UserType["role"]) => handleRoleChange(member.id, value)}
+                      onValueChange={(value: UserType["role"]) =>
+                        handleRoleChange(member.id, value)
+                      }
                     >
                       <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
                         <SelectValue />
@@ -472,8 +555,8 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        setSelectedStaff(member)
-                        setIsPasswordDialogOpen(true)
+                        setSelectedStaff(member);
+                        setIsPasswordDialogOpen(true);
                       }}
                       className="border-white/20 text-white hover:bg-white/10"
                     >
@@ -484,10 +567,16 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleToggleActive(member.id, member.isActive || false)}
+                      onClick={() =>
+                        handleToggleActive(member.id, member.isActive || false)
+                      }
                       className="border-white/20 text-white hover:bg-white/10"
                     >
-                      {member.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {member.isActive ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   )}
                   {canDeleteStaff && (
@@ -508,11 +597,16 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
       </Card>
 
       {/* Password Reset Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      >
         <DialogContent className="bg-gray-900 border-gray-700">
           <DialogHeader>
             <DialogTitle className="text-white">Reset Password</DialogTitle>
-            <DialogDescription className="text-gray-300">Reset password for {selectedStaff?.name}</DialogDescription>
+            <DialogDescription className="text-gray-300">
+              Reset password for {selectedStaff?.name}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -527,12 +621,15 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                 className="bg-white/10 border-white/20 text-white"
               />
             </div>
-            <Button onClick={handlePasswordReset} className="w-full bg-gradient-to-r from-blue-500 to-purple-600">
+            <Button
+              onClick={handlePasswordReset}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+            >
               Reset Password
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

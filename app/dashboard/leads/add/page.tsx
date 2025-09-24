@@ -1,24 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { addLead, getBranches, getStaff } from "@/lib/auth"
-import { useAuth } from "@/hooks/use-auth"
-import { ArrowLeft, Plus } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
+import { ArrowLeft, Plus } from "lucide-react";
+import Link from "next/link";
+import { getBranches } from "@/services/branch-service";
+import { addLead } from "@/services/lead-service";
+import { getStaff } from "@/services/staff-service";
 
 export default function AddLeadPage() {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     clientName: "",
@@ -32,30 +40,30 @@ export default function AddLeadPage() {
     additionalInfo: "",
     branchId: "",
     assignedStaff: "unassigned",
-  })
+  });
 
   const [customInputs, setCustomInputs] = useState({
     leadType: "",
     leadSource: "",
     branchId: "",
     assignedStaff: "",
-  })
+  });
 
   const [showCustomInput, setShowCustomInput] = useState({
     leadType: false,
     leadSource: false,
     branchId: false,
     assignedStaff: false,
-  })
+  });
 
-  const branches = getBranches()
-  const staffMembers = getStaff().filter((s) => s.isActive)
+  const branches = getBranches();
+  const staffMembers = getStaff().filter((s) => s.isActive);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
+    e.preventDefault();
+    if (!user) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const leadData = {
@@ -66,39 +74,40 @@ export default function AddLeadPage() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         branchId: formData.branchId || branches[0]?.id || "1",
-        assignedStaff: formData.assignedStaff === "unassigned" ? "" : formData.assignedStaff,
-      }
+        assignedStaff:
+          formData.assignedStaff === "unassigned" ? "" : formData.assignedStaff,
+      };
 
-      addLead(leadData)
-      router.push("/dashboard/total-leads")
+      addLead(leadData);
+      router.push("/dashboard/total-leads");
     } catch (error) {
-      console.error("Error adding lead:", error)
+      console.error("Error adding lead:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleCustomSelection = (field: string, value: string) => {
     if (value === "custom") {
-      setShowCustomInput((prev) => ({ ...prev, [field]: true }))
+      setShowCustomInput((prev) => ({ ...prev, [field]: true }));
     } else {
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      handleInputChange(field, value)
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      handleInputChange(field, value);
     }
-  }
+  };
 
   const handleCustomInputSubmit = (field: string) => {
-    const customValue = customInputs[field as keyof typeof customInputs]
+    const customValue = customInputs[field as keyof typeof customInputs];
     if (customValue.trim()) {
-      handleInputChange(field, customValue)
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      setCustomInputs((prev) => ({ ...prev, [field]: "" }))
+      handleInputChange(field, customValue);
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      setCustomInputs((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50 p-6">
@@ -128,7 +137,9 @@ export default function AddLeadPage() {
                   <Input
                     id="clientName"
                     value={formData.clientName}
-                    onChange={(e) => handleInputChange("clientName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("clientName", e.target.value)
+                    }
                     required
                     className="bg-white/80 border-teal-300/50"
                   />
@@ -139,7 +150,9 @@ export default function AddLeadPage() {
                   <Input
                     id="contactNumber"
                     value={formData.contactNumber}
-                    onChange={(e) => handleInputChange("contactNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contactNumber", e.target.value)
+                    }
                     required
                     className="bg-white/80 border-teal-300/50"
                   />
@@ -163,15 +176,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom lead type"
                         value={customInputs.leadType}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, leadType: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            leadType: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("leadType")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("leadType")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, leadType: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            leadType: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -180,21 +207,33 @@ export default function AddLeadPage() {
                   ) : (
                     <Select
                       value={formData.leadType}
-                      onValueChange={(value) => handleCustomSelection("leadType", value)}
+                      onValueChange={(value) =>
+                        handleCustomSelection("leadType", value)
+                      }
                     >
                       <SelectTrigger className="bg-white/80 border-teal-300/50">
                         <SelectValue placeholder="Select lead type" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Home Loan">Home Loan</SelectItem>
-                        <SelectItem value="Personal Loan">Personal Loan</SelectItem>
-                        <SelectItem value="Business Loan">Business Loan</SelectItem>
+                        <SelectItem value="Personal Loan">
+                          Personal Loan
+                        </SelectItem>
+                        <SelectItem value="Business Loan">
+                          Business Loan
+                        </SelectItem>
                         <SelectItem value="Car Loan">Car Loan</SelectItem>
-                        <SelectItem value="Education Loan">Education Loan</SelectItem>
-                        <SelectItem value="Medical Loan">Medical Loan</SelectItem>
+                        <SelectItem value="Education Loan">
+                          Education Loan
+                        </SelectItem>
+                        <SelectItem value="Medical Loan">
+                          Medical Loan
+                        </SelectItem>
                         <SelectItem value="Travel Loan">Travel Loan</SelectItem>
                         <SelectItem value="Credit Card">Credit Card</SelectItem>
-                        <SelectItem value="custom">+ Add Custom Lead Type</SelectItem>
+                        <SelectItem value="custom">
+                          + Add Custom Lead Type
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -207,15 +246,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom lead source"
                         value={customInputs.leadSource}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, leadSource: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            leadSource: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("leadSource")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("leadSource")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, leadSource: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            leadSource: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -224,19 +277,25 @@ export default function AddLeadPage() {
                   ) : (
                     <Select
                       value={formData.leadSource}
-                      onValueChange={(value) => handleCustomSelection("leadSource", value)}
+                      onValueChange={(value) =>
+                        handleCustomSelection("leadSource", value)
+                      }
                     >
                       <SelectTrigger className="bg-white/80 border-teal-300/50">
                         <SelectValue placeholder="Select lead source" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Social Media">Social Media</SelectItem>
+                        <SelectItem value="Social Media">
+                          Social Media
+                        </SelectItem>
                         <SelectItem value="Walk-in">Walk-in</SelectItem>
                         <SelectItem value="Referral">Referral</SelectItem>
                         <SelectItem value="Website">Website</SelectItem>
                         <SelectItem value="Phone Call">Phone Call</SelectItem>
                         <SelectItem value="Email">Email</SelectItem>
-                        <SelectItem value="custom">+ Add Custom Lead Source</SelectItem>
+                        <SelectItem value="custom">
+                          + Add Custom Lead Source
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -261,7 +320,9 @@ export default function AddLeadPage() {
                     min="300"
                     max="900"
                     value={formData.cibilScore}
-                    onChange={(e) => handleInputChange("cibilScore", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("cibilScore", e.target.value)
+                    }
                     className="bg-white/80 border-teal-300/50"
                   />
                 </div>
@@ -273,15 +334,29 @@ export default function AddLeadPage() {
                       <Input
                         placeholder="Enter custom branch name"
                         value={customInputs.branchId}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, branchId: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            branchId: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("branchId")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("branchId")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, branchId: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            branchId: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -290,7 +365,9 @@ export default function AddLeadPage() {
                   ) : (
                     <Select
                       value={formData.branchId}
-                      onValueChange={(value) => handleCustomSelection("branchId", value)}
+                      onValueChange={(value) =>
+                        handleCustomSelection("branchId", value)
+                      }
                     >
                       <SelectTrigger className="bg-white/80 border-teal-300/50">
                         <SelectValue placeholder="Select branch" />
@@ -301,28 +378,46 @@ export default function AddLeadPage() {
                             {branch.name}
                           </SelectItem>
                         ))}
-                        <SelectItem value="custom">+ Add Custom Branch</SelectItem>
+                        <SelectItem value="custom">
+                          + Add Custom Branch
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="assignedStaff">Assign to Staff (Optional)</Label>
+                  <Label htmlFor="assignedStaff">
+                    Assign to Staff (Optional)
+                  </Label>
                   {showCustomInput.assignedStaff ? (
                     <div className="flex gap-2">
                       <Input
                         placeholder="Enter custom staff member"
                         value={customInputs.assignedStaff}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, assignedStaff: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            assignedStaff: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("assignedStaff")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("assignedStaff")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, assignedStaff: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            assignedStaff: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -331,7 +426,9 @@ export default function AddLeadPage() {
                   ) : (
                     <Select
                       value={formData.assignedStaff}
-                      onValueChange={(value) => handleCustomSelection("assignedStaff", value)}
+                      onValueChange={(value) =>
+                        handleCustomSelection("assignedStaff", value)
+                      }
                     >
                       <SelectTrigger className="bg-white/80 border-teal-300/50">
                         <SelectValue placeholder="Select staff member" />
@@ -339,11 +436,16 @@ export default function AddLeadPage() {
                       <SelectContent>
                         <SelectItem value="unassigned">Unassigned</SelectItem>
                         {staffMembers.map((staff) => (
-                          <SelectItem key={staff.id} value={staff.name || staff.username}>
+                          <SelectItem
+                            key={staff.id}
+                            value={staff.name || staff.username}
+                          >
                             {staff.name || staff.username} - {staff.designation}
                           </SelectItem>
                         ))}
-                        <SelectItem value="custom">+ Add Custom Staff Member</SelectItem>
+                        <SelectItem value="custom">
+                          + Add Custom Staff Member
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -366,7 +468,9 @@ export default function AddLeadPage() {
                 <Textarea
                   id="additionalInfo"
                   value={formData.additionalInfo}
-                  onChange={(e) => handleInputChange("additionalInfo", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("additionalInfo", e.target.value)
+                  }
                   className="bg-white/80 border-teal-300/50"
                   rows={3}
                 />
@@ -391,5 +495,5 @@ export default function AddLeadPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

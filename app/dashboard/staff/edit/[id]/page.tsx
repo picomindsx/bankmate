@@ -1,27 +1,34 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter, useParams } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Users, Bell } from "lucide-react"
-import { getStaff, updateStaff, type User } from "@/lib/auth"
-import Image from "next/image"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter, useParams } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Users, Bell } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { getStaff, updateStaff } from "@/services/staff-service";
+import { User } from "@/types/common";
 
 export default function EditStaffPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const params = useParams()
-  const staffId = params.id as string
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const staffId = params.id as string;
 
-  const [staffMember, setStaffMember] = useState<User | null>(null)
+  const [staffMember, setStaffMember] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -29,32 +36,32 @@ export default function EditStaffPage() {
     email: "",
     photo: "",
     branchId: "1",
-  })
+  });
 
   const [customInputs, setCustomInputs] = useState({
     branchId: "",
     designation: "",
-  })
+  });
 
   const [showCustomInput, setShowCustomInput] = useState({
     branchId: false,
     designation: false,
-  })
+  });
 
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!user || user.type !== "official") {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    const staff = getStaff()
-    const member = staff.find((s) => s.id === staffId)
+    const staff = getStaff();
+    const member = staff.find((s) => s.id === staffId);
     if (member) {
-      setStaffMember(member)
+      setStaffMember(member);
       setFormData({
         name: member.name || "",
         phone: member.phone || "",
@@ -62,22 +69,27 @@ export default function EditStaffPage() {
         email: member.email || "",
         photo: member.photo || "",
         branchId: member.branchId || "1",
-      })
+      });
     } else {
-      setError("Staff member not found")
+      setError("Staff member not found");
     }
-  }, [user, router, staffId])
+  }, [user, router, staffId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      if (!formData.name || !formData.phone || !formData.designation || !formData.email) {
-        setError("Please fill in all required fields")
-        return
+      if (
+        !formData.name ||
+        !formData.phone ||
+        !formData.designation ||
+        !formData.email
+      ) {
+        setError("Please fill in all required fields");
+        return;
       }
 
       const updated = updateStaff(staffId, {
@@ -87,47 +99,47 @@ export default function EditStaffPage() {
         designation: formData.designation,
         photo: formData.photo,
         branchId: formData.branchId,
-      })
+      });
 
       if (updated) {
-        setSuccess("Staff member updated successfully!")
+        setSuccess("Staff member updated successfully!");
         setTimeout(() => {
-          router.push("/dashboard/staff")
-        }, 2000)
+          router.push("/dashboard/staff");
+        }, 2000);
       } else {
-        setError("Failed to update staff member")
+        setError("Failed to update staff member");
       }
     } catch (err) {
-      setError("Failed to update staff member. Please try again.")
+      setError("Failed to update staff member. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleCustomSelection = (field: string, value: string) => {
     if (value === "custom") {
-      setShowCustomInput((prev) => ({ ...prev, [field]: true }))
+      setShowCustomInput((prev) => ({ ...prev, [field]: true }));
     } else {
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      handleInputChange(field, value)
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      handleInputChange(field, value);
     }
-  }
+  };
 
   const handleCustomInputSubmit = (field: string) => {
-    const customValue = customInputs[field as keyof typeof customInputs]
+    const customValue = customInputs[field as keyof typeof customInputs];
     if (customValue.trim()) {
-      handleInputChange(field, customValue)
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }))
-      setCustomInputs((prev) => ({ ...prev, [field]: "" }))
+      handleInputChange(field, customValue);
+      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
+      setCustomInputs((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   if (!user || user.type !== "official") {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (!staffMember) {
@@ -135,11 +147,13 @@ export default function EditStaffPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card>
           <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">{error || "Loading staff member..."}</p>
+            <p className="text-center text-muted-foreground">
+              {error || "Loading staff member..."}
+            </p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -163,7 +177,9 @@ export default function EditStaffPage() {
             />
             <div>
               <h1 className="text-xl font-semibold">Edit Staff Member</h1>
-              <p className="text-sm text-muted-foreground">Update employee information</p>
+              <p className="text-sm text-muted-foreground">
+                Update employee information
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -187,7 +203,9 @@ export default function EditStaffPage() {
               <Users className="h-5 w-5" />
               Edit Staff Information
             </CardTitle>
-            <CardDescription>Update the details for {staffMember.name}</CardDescription>
+            <CardDescription>
+              Update the details for {staffMember.name}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -235,15 +253,29 @@ export default function EditStaffPage() {
                       <Input
                         placeholder="Enter custom designation"
                         value={customInputs.designation}
-                        onChange={(e) => setCustomInputs((prev) => ({ ...prev, designation: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomInputs((prev) => ({
+                            ...prev,
+                            designation: e.target.value,
+                          }))
+                        }
                       />
-                      <Button type="button" onClick={() => handleCustomInputSubmit("designation")} size="sm">
+                      <Button
+                        type="button"
+                        onClick={() => handleCustomInputSubmit("designation")}
+                        size="sm"
+                      >
                         Add
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCustomInput((prev) => ({ ...prev, designation: false }))}
+                        onClick={() =>
+                          setShowCustomInput((prev) => ({
+                            ...prev,
+                            designation: false,
+                          }))
+                        }
                         size="sm"
                       >
                         Cancel
@@ -253,18 +285,24 @@ export default function EditStaffPage() {
                     <select
                       id="designation"
                       value={formData.designation}
-                      onChange={(e) => handleCustomSelection("designation", e.target.value)}
+                      onChange={(e) =>
+                        handleCustomSelection("designation", e.target.value)
+                      }
                       className="w-full px-3 py-2 border rounded-md bg-background"
                       required
                     >
                       <option value="">Select designation</option>
                       <option value="Manager">Manager</option>
-                      <option value="Assistant Manager">Assistant Manager</option>
+                      <option value="Assistant Manager">
+                        Assistant Manager
+                      </option>
                       <option value="Senior Executive">Senior Executive</option>
                       <option value="Executive">Executive</option>
                       <option value="Junior Executive">Junior Executive</option>
                       <option value="Team Lead">Team Lead</option>
-                      <option value="Sales Representative">Sales Representative</option>
+                      <option value="Sales Representative">
+                        Sales Representative
+                      </option>
                       <option value="Customer Service">Customer Service</option>
                       <option value="Branch Head">Branch Head</option>
                       <option value="custom">+ Add Custom Designation</option>
@@ -280,15 +318,29 @@ export default function EditStaffPage() {
                     <Input
                       placeholder="Enter custom branch name"
                       value={customInputs.branchId}
-                      onChange={(e) => setCustomInputs((prev) => ({ ...prev, branchId: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomInputs((prev) => ({
+                          ...prev,
+                          branchId: e.target.value,
+                        }))
+                      }
                     />
-                    <Button type="button" onClick={() => handleCustomInputSubmit("branchId")} size="sm">
+                    <Button
+                      type="button"
+                      onClick={() => handleCustomInputSubmit("branchId")}
+                      size="sm"
+                    >
                       Add
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setShowCustomInput((prev) => ({ ...prev, branchId: false }))}
+                      onClick={() =>
+                        setShowCustomInput((prev) => ({
+                          ...prev,
+                          branchId: false,
+                        }))
+                      }
                       size="sm"
                     >
                       Cancel
@@ -298,7 +350,9 @@ export default function EditStaffPage() {
                   <select
                     id="branch"
                     value={formData.branchId}
-                    onChange={(e) => handleCustomSelection("branchId", e.target.value)}
+                    onChange={(e) =>
+                      handleCustomSelection("branchId", e.target.value)
+                    }
                     className="w-full px-3 py-2 border rounded-md bg-background"
                   >
                     <option value="1">Mumbai Central Branch</option>
@@ -347,5 +401,5 @@ export default function EditStaffPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

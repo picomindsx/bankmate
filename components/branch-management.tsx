@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Building2,
   MapPin,
@@ -32,24 +38,31 @@ import {
   Filter,
   Download,
   RefreshCw,
-} from "lucide-react"
-import { getBranches, getBranchStatistics, addBranch, type Branch } from "@/lib/auth"
+} from "lucide-react";
+import {
+  getBranches,
+  getBranchStatistics,
+  addBranch,
+} from "@/services/branch-service";
+import { Branch } from "@/types/common";
 
 interface BranchManagementProps {
-  currentUser: any
+  currentUser: any;
 }
 
-export default function BranchManagement({ currentUser }: BranchManagementProps) {
-  const [branches, setBranches] = useState<Branch[]>([])
-  const [filteredBranches, setFilteredBranches] = useState<Branch[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedRegion, setSelectedRegion] = useState("all")
-  const [selectedZone, setSelectedZone] = useState("all")
-  const [selectedType, setSelectedType] = useState("all")
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+export default function BranchManagement({
+  currentUser,
+}: BranchManagementProps) {
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [filteredBranches, setFilteredBranches] = useState<Branch[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedZone, setSelectedZone] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   const [newBranch, setNewBranch] = useState({
     name: "",
@@ -87,13 +100,13 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
       monthlyRevenueTarget: 30000000,
       conversionRateTarget: 20,
     },
-  })
+  });
 
   useEffect(() => {
-    const branchData = getBranches()
-    setBranches(branchData)
-    setFilteredBranches(branchData)
-  }, [])
+    const branchData = getBranches();
+    setBranches(branchData);
+    setFilteredBranches(branchData);
+  }, []);
 
   useEffect(() => {
     const filtered = branches.filter((branch) => {
@@ -101,21 +114,24 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
         branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         branch.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         branch.address.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        branch.manager.name.toLowerCase().includes(searchTerm.toLowerCase())
+        branch.manager.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesRegion = selectedRegion === "all" || branch.region === selectedRegion
-      const matchesZone = selectedZone === "all" || branch.zone === selectedZone
-      const matchesType = selectedType === "all" || branch.type === selectedType
+      const matchesRegion =
+        selectedRegion === "all" || branch.region === selectedRegion;
+      const matchesZone =
+        selectedZone === "all" || branch.zone === selectedZone;
+      const matchesType =
+        selectedType === "all" || branch.type === selectedType;
 
-      return matchesSearch && matchesRegion && matchesZone && matchesType
-    })
+      return matchesSearch && matchesRegion && matchesZone && matchesType;
+    });
 
-    setFilteredBranches(filtered)
-  }, [branches, searchTerm, selectedRegion, selectedZone, selectedType])
+    setFilteredBranches(filtered);
+  }, [branches, searchTerm, selectedRegion, selectedZone, selectedType]);
 
-  const statistics = getBranchStatistics()
-  const regions = [...new Set(branches.map((b) => b.region))]
-  const zones = [...new Set(branches.map((b) => b.zone))]
+  const statistics = getBranchStatistics();
+  const regions = [...new Set(branches.map((b) => b.region))];
+  const zones = [...new Set(branches.map((b) => b.zone))];
 
   const handleAddBranch = () => {
     const branchData = {
@@ -128,16 +144,22 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
         conversionRate: 0,
         lastUpdated: new Date().toISOString(),
       },
-    }
+    };
 
-    const createdBranch = addBranch(branchData)
-    setBranches(getBranches())
-    setIsAddDialogOpen(false)
+    const createdBranch = addBranch(branchData);
+    setBranches(getBranches());
+    setIsAddDialogOpen(false);
     // Reset form
     setNewBranch({
       name: "",
       code: "",
-      address: { street: "", city: "", state: "", pincode: "", country: "India" },
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        pincode: "",
+        country: "India",
+      },
       contact: { phone: "", email: "", fax: "" },
       manager: { name: "", phone: "", email: "" },
       region: "",
@@ -156,28 +178,28 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
         monthlyRevenueTarget: 30000000,
         conversionRateTarget: 20,
       },
-    })
-  }
+    });
+  };
 
   const getTypeColor = (type: Branch["type"]) => {
     switch (type) {
       case "main":
-        return "bg-blue-500"
+        return "bg-blue-500";
       case "sub":
-        return "bg-green-500"
+        return "bg-green-500";
       case "service":
-        return "bg-orange-500"
+        return "bg-orange-500";
       default:
-        return "bg-gray-500"
+        return "bg-gray-500";
     }
-  }
+  };
 
   const getPerformanceColor = (current: number, target: number) => {
-    const percentage = (current / target) * 100
-    if (percentage >= 90) return "text-green-500"
-    if (percentage >= 70) return "text-yellow-500"
-    return "text-red-500"
-  }
+    const percentage = (current / target) * 100;
+    if (percentage >= 90) return "text-green-500";
+    if (percentage >= 70) return "text-yellow-500";
+    return "text-red-500";
+  };
 
   return (
     <div className="space-y-6">
@@ -187,8 +209,12 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-100">Total Branches</p>
-                <p className="text-3xl font-bold text-white">{statistics.total}</p>
+                <p className="text-sm font-medium text-blue-100">
+                  Total Branches
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  {statistics.total}
+                </p>
                 <p className="text-xs text-blue-200">Active branches</p>
               </div>
               <Building2 className="h-12 w-12 text-blue-300" />
@@ -200,9 +226,16 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-100">Target Achievement</p>
+                <p className="text-sm font-medium text-green-100">
+                  Target Achievement
+                </p>
                 <p className="text-3xl font-bold text-white">
-                  {((statistics.totalCurrentLeads / statistics.totalTargetLeads) * 100).toFixed(1)}%
+                  {(
+                    (statistics.totalCurrentLeads /
+                      statistics.totalTargetLeads) *
+                    100
+                  ).toFixed(1)}
+                  %
                 </p>
                 <p className="text-xs text-green-200">Lead targets</p>
               </div>
@@ -215,7 +248,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">Revenue Progress</p>
+                <p className="text-sm font-medium text-purple-100">
+                  Revenue Progress
+                </p>
                 <p className="text-3xl font-bold text-white">
                   ₹{(statistics.totalCurrentRevenue / 10000000).toFixed(1)}Cr
                 </p>
@@ -230,8 +265,12 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-100">Avg Conversion</p>
-                <p className="text-3xl font-bold text-white">{statistics.averageConversionRate.toFixed(1)}%</p>
+                <p className="text-sm font-medium text-orange-100">
+                  Avg Conversion
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  {statistics.averageConversionRate.toFixed(1)}%
+                </p>
                 <p className="text-xs text-orange-200">Across all branches</p>
               </div>
               <BarChart3 className="h-12 w-12 text-orange-300" />
@@ -308,7 +347,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
               </DialogTrigger>
               <DialogContent className="bg-gray-900 border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Add New Branch</DialogTitle>
+                  <DialogTitle className="text-white">
+                    Add New Branch
+                  </DialogTitle>
                   <DialogDescription className="text-gray-300">
                     Create a new branch with comprehensive details and settings
                   </DialogDescription>
@@ -319,7 +360,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       <Label className="text-white">Branch Name</Label>
                       <Input
                         value={newBranch.name}
-                        onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                        onChange={(e) =>
+                          setNewBranch({ ...newBranch, name: e.target.value })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                       />
                     </div>
@@ -327,7 +370,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       <Label className="text-white">Branch Code</Label>
                       <Input
                         value={newBranch.code}
-                        onChange={(e) => setNewBranch({ ...newBranch, code: e.target.value })}
+                        onChange={(e) =>
+                          setNewBranch({ ...newBranch, code: e.target.value })
+                        }
                         className="bg-white/10 border-white/20 text-white"
                         placeholder="e.g., MUM001"
                       />
@@ -336,7 +381,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       <Label className="text-white">Region</Label>
                       <select
                         value={newBranch.region}
-                        onChange={(e) => setNewBranch({ ...newBranch, region: e.target.value })}
+                        onChange={(e) =>
+                          setNewBranch({ ...newBranch, region: e.target.value })
+                        }
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
                       >
                         <option value="">Select Region</option>
@@ -351,7 +398,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       <Label className="text-white">Zone</Label>
                       <select
                         value={newBranch.zone}
-                        onChange={(e) => setNewBranch({ ...newBranch, zone: e.target.value })}
+                        onChange={(e) =>
+                          setNewBranch({ ...newBranch, zone: e.target.value })
+                        }
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
                       >
                         <option value="">Select Zone</option>
@@ -364,7 +413,12 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       <Label className="text-white">Branch Type</Label>
                       <select
                         value={newBranch.type}
-                        onChange={(e) => setNewBranch({ ...newBranch, type: e.target.value as Branch["type"] })}
+                        onChange={(e) =>
+                          setNewBranch({
+                            ...newBranch,
+                            type: e.target.value as Branch["type"],
+                          })
+                        }
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
                       >
                         <option value="main">Main Branch</option>
@@ -382,7 +436,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         onChange={(e) =>
                           setNewBranch({
                             ...newBranch,
-                            manager: { ...newBranch.manager, name: e.target.value },
+                            manager: {
+                              ...newBranch.manager,
+                              name: e.target.value,
+                            },
                           })
                         }
                         className="bg-white/10 border-white/20 text-white"
@@ -395,7 +452,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         onChange={(e) =>
                           setNewBranch({
                             ...newBranch,
-                            manager: { ...newBranch.manager, phone: e.target.value },
+                            manager: {
+                              ...newBranch.manager,
+                              phone: e.target.value,
+                            },
                           })
                         }
                         className="bg-white/10 border-white/20 text-white"
@@ -408,7 +468,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         onChange={(e) =>
                           setNewBranch({
                             ...newBranch,
-                            manager: { ...newBranch.manager, email: e.target.value },
+                            manager: {
+                              ...newBranch.manager,
+                              email: e.target.value,
+                            },
                           })
                         }
                         className="bg-white/10 border-white/20 text-white"
@@ -421,7 +484,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         onChange={(e) =>
                           setNewBranch({
                             ...newBranch,
-                            contact: { ...newBranch.contact, phone: e.target.value },
+                            contact: {
+                              ...newBranch.contact,
+                              phone: e.target.value,
+                            },
                           })
                         }
                         className="bg-white/10 border-white/20 text-white"
@@ -434,7 +500,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         onChange={(e) =>
                           setNewBranch({
                             ...newBranch,
-                            contact: { ...newBranch.contact, email: e.target.value },
+                            contact: {
+                              ...newBranch.contact,
+                              email: e.target.value,
+                            },
                           })
                         }
                         className="bg-white/10 border-white/20 text-white"
@@ -452,7 +521,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       onChange={(e) =>
                         setNewBranch({
                           ...newBranch,
-                          address: { ...newBranch.address, street: e.target.value },
+                          address: {
+                            ...newBranch.address,
+                            street: e.target.value,
+                          },
                         })
                       }
                       className="bg-white/10 border-white/20 text-white"
@@ -463,7 +535,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       onChange={(e) =>
                         setNewBranch({
                           ...newBranch,
-                          address: { ...newBranch.address, city: e.target.value },
+                          address: {
+                            ...newBranch.address,
+                            city: e.target.value,
+                          },
                         })
                       }
                       className="bg-white/10 border-white/20 text-white"
@@ -474,7 +549,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       onChange={(e) =>
                         setNewBranch({
                           ...newBranch,
-                          address: { ...newBranch.address, state: e.target.value },
+                          address: {
+                            ...newBranch.address,
+                            state: e.target.value,
+                          },
                         })
                       }
                       className="bg-white/10 border-white/20 text-white"
@@ -485,7 +563,10 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                       onChange={(e) =>
                         setNewBranch({
                           ...newBranch,
-                          address: { ...newBranch.address, pincode: e.target.value },
+                          address: {
+                            ...newBranch.address,
+                            pincode: e.target.value,
+                          },
                         })
                       }
                       className="bg-white/10 border-white/20 text-white"
@@ -493,17 +574,26 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                   </div>
                 </div>
 
-                <Button onClick={handleAddBranch} className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600">
+                <Button
+                  onClick={handleAddBranch}
+                  className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600"
+                >
                   Create Branch
                 </Button>
               </DialogContent>
             </Dialog>
 
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -529,7 +619,9 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                     {branch.code} • {branch.region} Region
                   </CardDescription>
                 </div>
-                <Badge className={`${getTypeColor(branch.type)} text-white border-0`}>
+                <Badge
+                  className={`${getTypeColor(branch.type)} text-white border-0`}
+                >
                   {branch.type.toUpperCase()}
                 </Badge>
               </div>
@@ -553,15 +645,23 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-2 rounded bg-white/5">
                   <div
-                    className={`text-lg font-bold ${getPerformanceColor(branch.performance.currentMonthLeads, branch.targetMetrics.monthlyLeadTarget)}`}
+                    className={`text-lg font-bold ${getPerformanceColor(
+                      branch.performance.currentMonthLeads,
+                      branch.targetMetrics.monthlyLeadTarget
+                    )}`}
                   >
                     {branch.performance.currentMonthLeads}
                   </div>
-                  <div className="text-xs text-gray-400">Leads ({branch.targetMetrics.monthlyLeadTarget})</div>
+                  <div className="text-xs text-gray-400">
+                    Leads ({branch.targetMetrics.monthlyLeadTarget})
+                  </div>
                 </div>
                 <div className="text-center p-2 rounded bg-white/5">
                   <div
-                    className={`text-lg font-bold ${getPerformanceColor(branch.performance.conversionRate, branch.targetMetrics.conversionRateTarget)}`}
+                    className={`text-lg font-bold ${getPerformanceColor(
+                      branch.performance.conversionRate,
+                      branch.targetMetrics.conversionRateTarget
+                    )}`}
                   >
                     {branch.performance.conversionRate.toFixed(1)}%
                   </div>
@@ -574,8 +674,8 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setSelectedBranch(branch)
-                    setIsViewDialogOpen(true)
+                    setSelectedBranch(branch);
+                    setIsViewDialogOpen(true);
                   }}
                   className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
@@ -586,8 +686,8 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setSelectedBranch(branch)
-                    setIsEditDialogOpen(true)
+                    setSelectedBranch(branch);
+                    setIsEditDialogOpen(true);
                   }}
                   className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
@@ -616,16 +716,28 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
           {selectedBranch && (
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-white/10">
-                <TabsTrigger value="overview" className="text-white data-[state=active]:bg-white/20">
+                <TabsTrigger
+                  value="overview"
+                  className="text-white data-[state=active]:bg-white/20"
+                >
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="performance" className="text-white data-[state=active]:bg-white/20">
+                <TabsTrigger
+                  value="performance"
+                  className="text-white data-[state=active]:bg-white/20"
+                >
                   Performance
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="text-white data-[state=active]:bg-white/20">
+                <TabsTrigger
+                  value="contact"
+                  className="text-white data-[state=active]:bg-white/20"
+                >
                   Contact
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="text-white data-[state=active]:bg-white/20">
+                <TabsTrigger
+                  value="settings"
+                  className="text-white data-[state=active]:bg-white/20"
+                >
                   Settings
                 </TabsTrigger>
               </TabsList>
@@ -634,31 +746,45 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader>
-                      <CardTitle className="text-white text-sm">Branch Details</CardTitle>
+                      <CardTitle className="text-white text-sm">
+                        Branch Details
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Code:</span>
-                        <span className="text-white">{selectedBranch.code}</span>
+                        <span className="text-white">
+                          {selectedBranch.code}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Type:</span>
-                        <Badge className={`${getTypeColor(selectedBranch.type)} text-white border-0 text-xs`}>
+                        <Badge
+                          className={`${getTypeColor(
+                            selectedBranch.type
+                          )} text-white border-0 text-xs`}
+                        >
                           {selectedBranch.type.toUpperCase()}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Region:</span>
-                        <span className="text-white">{selectedBranch.region}</span>
+                        <span className="text-white">
+                          {selectedBranch.region}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Zone:</span>
-                        <span className="text-white">{selectedBranch.zone}</span>
+                        <span className="text-white">
+                          {selectedBranch.zone}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Established:</span>
                         <span className="text-white">
-                          {new Date(selectedBranch.establishedDate).toLocaleDateString()}
+                          {new Date(
+                            selectedBranch.establishedDate
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </CardContent>
@@ -666,15 +792,19 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
 
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader>
-                      <CardTitle className="text-white text-sm">Address</CardTitle>
+                      <CardTitle className="text-white text-sm">
+                        Address
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-white">
                       <div>{selectedBranch.address.street}</div>
                       <div>
-                        {selectedBranch.address.city}, {selectedBranch.address.state}
+                        {selectedBranch.address.city},{" "}
+                        {selectedBranch.address.state}
                       </div>
                       <div>
-                        {selectedBranch.address.pincode}, {selectedBranch.address.country}
+                        {selectedBranch.address.pincode},{" "}
+                        {selectedBranch.address.country}
                       </div>
                     </CardContent>
                   </Card>
@@ -682,12 +812,18 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
 
                 <Card className="bg-white/5 border-white/10">
                   <CardHeader>
-                    <CardTitle className="text-white text-sm">Services Offered</CardTitle>
+                    <CardTitle className="text-white text-sm">
+                      Services Offered
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {selectedBranch.services.map((service, index) => (
-                        <Badge key={index} variant="outline" className="border-white/20 text-white">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="border-white/20 text-white"
+                        >
                           {service}
                         </Badge>
                       ))}
@@ -716,7 +852,13 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         <div
                           className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
                           style={{
-                            width: `${Math.min((selectedBranch.performance.currentMonthLeads / selectedBranch.targetMetrics.monthlyLeadTarget) * 100, 100)}%`,
+                            width: `${Math.min(
+                              (selectedBranch.performance.currentMonthLeads /
+                                selectedBranch.targetMetrics
+                                  .monthlyLeadTarget) *
+                                100,
+                              100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -732,16 +874,32 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-white mb-2">
-                        ₹{(selectedBranch.performance.currentMonthRevenue / 10000000).toFixed(1)}Cr
+                        ₹
+                        {(
+                          selectedBranch.performance.currentMonthRevenue /
+                          10000000
+                        ).toFixed(1)}
+                        Cr
                       </div>
                       <div className="text-sm text-gray-400">
-                        Target: ₹{(selectedBranch.targetMetrics.monthlyRevenueTarget / 10000000).toFixed(1)}Cr
+                        Target: ₹
+                        {(
+                          selectedBranch.targetMetrics.monthlyRevenueTarget /
+                          10000000
+                        ).toFixed(1)}
+                        Cr
                       </div>
                       <div className="w-full bg-white/10 rounded-full h-2 mt-2">
                         <div
                           className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
                           style={{
-                            width: `${Math.min((selectedBranch.performance.currentMonthRevenue / selectedBranch.targetMetrics.monthlyRevenueTarget) * 100, 100)}%`,
+                            width: `${Math.min(
+                              (selectedBranch.performance.currentMonthRevenue /
+                                selectedBranch.targetMetrics
+                                  .monthlyRevenueTarget) *
+                                100,
+                              100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -760,13 +918,20 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                         {selectedBranch.performance.conversionRate.toFixed(1)}%
                       </div>
                       <div className="text-sm text-gray-400">
-                        Target: {selectedBranch.targetMetrics.conversionRateTarget}%
+                        Target:{" "}
+                        {selectedBranch.targetMetrics.conversionRateTarget}%
                       </div>
                       <div className="w-full bg-white/10 rounded-full h-2 mt-2">
                         <div
                           className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
                           style={{
-                            width: `${Math.min((selectedBranch.performance.conversionRate / selectedBranch.targetMetrics.conversionRateTarget) * 100, 100)}%`,
+                            width: `${Math.min(
+                              (selectedBranch.performance.conversionRate /
+                                selectedBranch.targetMetrics
+                                  .conversionRateTarget) *
+                                100,
+                              100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -779,21 +944,29 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader>
-                      <CardTitle className="text-white text-sm">Branch Contact</CardTitle>
+                      <CardTitle className="text-white text-sm">
+                        Branch Contact
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-white">{selectedBranch.contact.phone}</span>
+                        <span className="text-white">
+                          {selectedBranch.contact.phone}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-gray-400" />
-                        <span className="text-white">{selectedBranch.contact.email}</span>
+                        <span className="text-white">
+                          {selectedBranch.contact.email}
+                        </span>
                       </div>
                       {selectedBranch.contact.fax && (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-gray-400" />
-                          <span className="text-white">Fax: {selectedBranch.contact.fax}</span>
+                          <span className="text-white">
+                            Fax: {selectedBranch.contact.fax}
+                          </span>
                         </div>
                       )}
                     </CardContent>
@@ -801,20 +974,28 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
 
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader>
-                      <CardTitle className="text-white text-sm">Branch Manager</CardTitle>
+                      <CardTitle className="text-white text-sm">
+                        Branch Manager
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-gray-400" />
-                        <span className="text-white">{selectedBranch.manager.name}</span>
+                        <span className="text-white">
+                          {selectedBranch.manager.name}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-white">{selectedBranch.manager.phone}</span>
+                        <span className="text-white">
+                          {selectedBranch.manager.phone}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-gray-400" />
-                        <span className="text-white">{selectedBranch.manager.email}</span>
+                        <span className="text-white">
+                          {selectedBranch.manager.email}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -831,19 +1012,22 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
                     <div className="flex justify-between">
                       <span className="text-gray-400">Weekdays:</span>
                       <span className="text-white">
-                        {selectedBranch.operatingHours.weekdays.open} - {selectedBranch.operatingHours.weekdays.close}
+                        {selectedBranch.operatingHours.weekdays.open} -{" "}
+                        {selectedBranch.operatingHours.weekdays.close}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Saturday:</span>
                       <span className="text-white">
-                        {selectedBranch.operatingHours.saturday.open} - {selectedBranch.operatingHours.saturday.close}
+                        {selectedBranch.operatingHours.saturday.open} -{" "}
+                        {selectedBranch.operatingHours.saturday.close}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Sunday:</span>
                       <span className="text-white">
-                        {selectedBranch.operatingHours.sunday.open} - {selectedBranch.operatingHours.sunday.close}
+                        {selectedBranch.operatingHours.sunday.open} -{" "}
+                        {selectedBranch.operatingHours.sunday.close}
                       </span>
                     </div>
                   </CardContent>
@@ -853,10 +1037,16 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
               <TabsContent value="settings" className="space-y-4">
                 <Card className="bg-white/5 border-white/10">
                   <CardHeader>
-                    <CardTitle className="text-white text-sm">Branch Status</CardTitle>
+                    <CardTitle className="text-white text-sm">
+                      Branch Status
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Badge className={selectedBranch.isActive ? "bg-green-500" : "bg-red-500"}>
+                    <Badge
+                      className={
+                        selectedBranch.isActive ? "bg-green-500" : "bg-red-500"
+                      }
+                    >
                       {selectedBranch.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </CardContent>
@@ -867,5 +1057,5 @@ export default function BranchManagement({ currentUser }: BranchManagementProps)
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

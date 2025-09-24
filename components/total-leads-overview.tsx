@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   TrendingUp,
   Users,
@@ -27,131 +27,155 @@ import {
   Mail,
   DollarSign,
   Percent,
-} from "lucide-react"
-import { getLeads, getBranches, getStaff, type Lead } from "@/lib/auth"
+} from "lucide-react";
+import { getBranches } from "@/services/branch-service";
+import { getLeads } from "@/services/lead-service";
+import { getStaff } from "@/services/staff-service";
+import { Lead } from "@/types/common";
 
 interface LeadAnalytics {
-  totalLeads: number
-  newLeads: number
-  conversionRate: number
-  averageValue: number
-  topPerformingBranch: string
-  leadsByStatus: Record<string, number>
-  leadsByType: Record<string, number>
-  leadsBySource: Record<string, number>
-  monthlyTrend: Array<{ month: string; leads: number; conversions: number }>
-  recentActivity: Array<{ id: string; action: string; timestamp: string; lead: string }>
+  totalLeads: number;
+  newLeads: number;
+  conversionRate: number;
+  averageValue: number;
+  topPerformingBranch: string;
+  leadsByStatus: Record<string, number>;
+  leadsByType: Record<string, number>;
+  leadsBySource: Record<string, number>;
+  monthlyTrend: Array<{ month: string; leads: number; conversions: number }>;
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    timestamp: string;
+    lead: string;
+  }>;
 }
 
 export function TotalLeadsOverview() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedBranch, setSelectedBranch] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState("all")
-  const [selectedType, setSelectedType] = useState("all")
-  const [dateRange, setDateRange] = useState("30")
-  const [sortBy, setSortBy] = useState("createdAt")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [dateRange, setDateRange] = useState("30");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const branches = getBranches()
-  const staff = getStaff()
-  const allLeads = getLeads()
+  const branches = getBranches();
+  const staff = getStaff();
+  const allLeads = getLeads();
 
   const analytics: LeadAnalytics = useMemo(() => {
     const filteredLeads = allLeads.filter((lead) => {
       const matchesSearch =
         lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.contactNumber.includes(searchTerm) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesBranch = selectedBranch === "all" || lead.branchId === selectedBranch
-      const matchesStatus = selectedStatus === "all" || lead.applicationStatus === selectedStatus
-      const matchesType = selectedType === "all" || lead.leadType === selectedType
+      const matchesBranch =
+        selectedBranch === "all" || lead.branchId === selectedBranch;
+      const matchesStatus =
+        selectedStatus === "all" || lead.applicationStatus === selectedStatus;
+      const matchesType =
+        selectedType === "all" || lead.leadType === selectedType;
 
-      const leadDate = new Date(lead.createdAt)
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - Number.parseInt(dateRange))
-      const matchesDate = leadDate >= cutoffDate
+      const leadDate = new Date(lead.createdAt);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - Number.parseInt(dateRange));
+      const matchesDate = leadDate >= cutoffDate;
 
-      return matchesSearch && matchesBranch && matchesStatus && matchesType && matchesDate
-    })
+      return (
+        matchesSearch &&
+        matchesBranch &&
+        matchesStatus &&
+        matchesType &&
+        matchesDate
+      );
+    });
 
-    const totalLeads = filteredLeads.length
+    const totalLeads = filteredLeads.length;
     const newLeads = filteredLeads.filter((lead) => {
-      const leadDate = new Date(lead.createdAt)
-      const today = new Date()
-      return leadDate.toDateString() === today.toDateString()
-    }).length
+      const leadDate = new Date(lead.createdAt);
+      const today = new Date();
+      return leadDate.toDateString() === today.toDateString();
+    }).length;
 
-    const sanctionedLeads = filteredLeads.filter((lead) => lead.applicationStatus === "sanctioned").length
-    const conversionRate = totalLeads > 0 ? (sanctionedLeads / totalLeads) * 100 : 0
+    const sanctionedLeads = filteredLeads.filter(
+      (lead) => lead.applicationStatus === "sanctioned"
+    ).length;
+    const conversionRate =
+      totalLeads > 0 ? (sanctionedLeads / totalLeads) * 100 : 0;
 
-    const averageValue = filteredLeads.reduce((sum, lead) => sum + lead.cost, 0) / (totalLeads || 1)
+    const averageValue =
+      filteredLeads.reduce((sum, lead) => sum + lead.cost, 0) /
+      (totalLeads || 1);
 
     // Branch performance
     const branchLeadCounts = branches.map((branch) => ({
       name: branch.name,
       count: filteredLeads.filter((lead) => lead.branchId === branch.id).length,
-    }))
-    const topPerformingBranch = branchLeadCounts.reduce((max, branch) => (branch.count > max.count ? branch : max), {
-      name: "None",
-      count: 0,
-    }).name
+    }));
+    const topPerformingBranch = branchLeadCounts.reduce(
+      (max, branch) => (branch.count > max.count ? branch : max),
+      {
+        name: "None",
+        count: 0,
+      }
+    ).name;
 
     // Status distribution
-    const leadsByStatus = filteredLeads.reduce(
-      (acc, lead) => {
-        acc[lead.applicationStatus] = (acc[lead.applicationStatus] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+    const leadsByStatus = filteredLeads.reduce((acc, lead) => {
+      acc[lead.applicationStatus] = (acc[lead.applicationStatus] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Type distribution
-    const leadsByType = filteredLeads.reduce(
-      (acc, lead) => {
-        acc[lead.leadType] = (acc[lead.leadType] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+    const leadsByType = filteredLeads.reduce((acc, lead) => {
+      acc[lead.leadType] = (acc[lead.leadType] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Source distribution
-    const leadsBySource = filteredLeads.reduce(
-      (acc, lead) => {
-        acc[lead.leadSource] = (acc[lead.leadSource] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+    const leadsBySource = filteredLeads.reduce((acc, lead) => {
+      acc[lead.leadSource] = (acc[lead.leadSource] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Monthly trend (last 6 months)
     const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date()
-      date.setMonth(date.getMonth() - i)
-      const monthName = date.toLocaleDateString("en-US", { month: "short" })
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthName = date.toLocaleDateString("en-US", { month: "short" });
 
       const monthLeads = allLeads.filter((lead) => {
-        const leadDate = new Date(lead.createdAt)
-        return leadDate.getMonth() === date.getMonth() && leadDate.getFullYear() === date.getFullYear()
-      })
+        const leadDate = new Date(lead.createdAt);
+        return (
+          leadDate.getMonth() === date.getMonth() &&
+          leadDate.getFullYear() === date.getFullYear()
+        );
+      });
 
       return {
         month: monthName,
         leads: monthLeads.length,
-        conversions: monthLeads.filter((lead) => lead.applicationStatus === "sanctioned").length,
-      }
-    }).reverse()
+        conversions: monthLeads.filter(
+          (lead) => lead.applicationStatus === "sanctioned"
+        ).length,
+      };
+    }).reverse();
 
     // Recent activity
     const recentActivity = filteredLeads
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
       .slice(0, 10)
       .map((lead) => ({
         id: lead.id,
         action: `Lead ${lead.applicationStatus}`,
         timestamp: lead.updatedAt,
         lead: lead.clientName,
-      }))
+      }));
 
     return {
       totalLeads,
@@ -164,86 +188,121 @@ export function TotalLeadsOverview() {
       leadsBySource,
       monthlyTrend,
       recentActivity,
-    }
-  }, [allLeads, branches, searchTerm, selectedBranch, selectedStatus, selectedType, dateRange])
+    };
+  }, [
+    allLeads,
+    branches,
+    searchTerm,
+    selectedBranch,
+    selectedStatus,
+    selectedType,
+    dateRange,
+  ]);
 
   const filteredAndSortedLeads = useMemo(() => {
     const filtered = allLeads.filter((lead) => {
       const matchesSearch =
         lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.contactNumber.includes(searchTerm) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesBranch = selectedBranch === "all" || lead.branchId === selectedBranch
-      const matchesStatus = selectedStatus === "all" || lead.applicationStatus === selectedStatus
-      const matchesType = selectedType === "all" || lead.leadType === selectedType
+      const matchesBranch =
+        selectedBranch === "all" || lead.branchId === selectedBranch;
+      const matchesStatus =
+        selectedStatus === "all" || lead.applicationStatus === selectedStatus;
+      const matchesType =
+        selectedType === "all" || lead.leadType === selectedType;
 
-      const leadDate = new Date(lead.createdAt)
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - Number.parseInt(dateRange))
-      const matchesDate = leadDate >= cutoffDate
+      const leadDate = new Date(lead.createdAt);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - Number.parseInt(dateRange));
+      const matchesDate = leadDate >= cutoffDate;
 
-      return matchesSearch && matchesBranch && matchesStatus && matchesType && matchesDate
-    })
+      return (
+        matchesSearch &&
+        matchesBranch &&
+        matchesStatus &&
+        matchesType &&
+        matchesDate
+      );
+    });
 
     // Sort leads
     filtered.sort((a, b) => {
-      let aValue: any = a[sortBy as keyof Lead]
-      let bValue: any = b[sortBy as keyof Lead]
+      let aValue: any = a[sortBy as keyof Lead];
+      let bValue: any = b[sortBy as keyof Lead];
 
       if (sortBy === "createdAt" || sortBy === "updatedAt") {
-        aValue = new Date(aValue).getTime()
-        bValue = new Date(bValue).getTime()
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
       }
 
       if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase()
-        bValue = bValue.toLowerCase()
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
       }
 
       if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1
+        return aValue > bValue ? 1 : -1;
       } else {
-        return aValue < bValue ? 1 : -1
+        return aValue < bValue ? 1 : -1;
       }
-    })
+    });
 
-    return filtered
-  }, [allLeads, searchTerm, selectedBranch, selectedStatus, selectedType, dateRange, sortBy, sortOrder])
+    return filtered;
+  }, [
+    allLeads,
+    searchTerm,
+    selectedBranch,
+    selectedStatus,
+    selectedType,
+    dateRange,
+    sortBy,
+    sortOrder,
+  ]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "sanctioned":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case "pending":
-        return <Clock className="h-4 w-4 text-orange-600" />
+        return <Clock className="h-4 w-4 text-orange-600" />;
       case "rejected":
-        return <XCircle className="h-4 w-4 text-red-600" />
+        return <XCircle className="h-4 w-4 text-red-600" />;
       case "login":
-        return <AlertCircle className="h-4 w-4 text-blue-600" />
+        return <AlertCircle className="h-4 w-4 text-blue-600" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "sanctioned":
-        return "bg-green-500 text-white"
+        return "bg-green-500 text-white";
       case "pending":
-        return "bg-orange-500 text-white"
+        return "bg-orange-500 text-white";
       case "rejected":
-        return "bg-red-500 text-white"
+        return "bg-red-500 text-white";
       case "login":
-        return "bg-blue-500 text-white"
+        return "bg-blue-500 text-white";
       default:
-        return "bg-gray-500 text-white"
+        return "bg-gray-500 text-white";
     }
-  }
+  };
 
   const exportData = () => {
     const csvContent = [
-      ["Name", "Phone", "Email", "Type", "Status", "Branch", "Created", "Value"].join(","),
+      [
+        "Name",
+        "Phone",
+        "Email",
+        "Type",
+        "Status",
+        "Branch",
+        "Created",
+        "Value",
+      ].join(","),
       ...filteredAndSortedLeads.map((lead) =>
         [
           lead.clientName,
@@ -254,18 +313,18 @@ export function TotalLeadsOverview() {
           branches.find((b) => b.id === lead.branchId)?.name || "Unknown",
           new Date(lead.createdAt).toLocaleDateString(),
           lead.cost.toString(),
-        ].join(","),
+        ].join(",")
       ),
-    ].join("\n")
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `leads-export-${new Date().toISOString().split("T")[0]}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-export-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
@@ -276,7 +335,9 @@ export function TotalLeadsOverview() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-100">Total Leads</p>
-                <p className="text-3xl font-bold text-white">{analytics.totalLeads}</p>
+                <p className="text-3xl font-bold text-white">
+                  {analytics.totalLeads}
+                </p>
                 <p className="text-xs text-blue-200 flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" />+{analytics.newLeads} today
                 </p>
@@ -290,8 +351,12 @@ export function TotalLeadsOverview() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-100">Conversion Rate</p>
-                <p className="text-3xl font-bold text-white">{analytics.conversionRate.toFixed(1)}%</p>
+                <p className="text-sm font-medium text-green-100">
+                  Conversion Rate
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  {analytics.conversionRate.toFixed(1)}%
+                </p>
                 <p className="text-xs text-green-200 flex items-center gap-1">
                   <Percent className="h-3 w-3" />
                   Success rate
@@ -306,8 +371,12 @@ export function TotalLeadsOverview() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">Average Value</p>
-                <p className="text-3xl font-bold text-white">₹{(analytics.averageValue / 100000).toFixed(1)}L</p>
+                <p className="text-sm font-medium text-purple-100">
+                  Average Value
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  ₹{(analytics.averageValue / 100000).toFixed(1)}L
+                </p>
                 <p className="text-xs text-purple-200 flex items-center gap-1">
                   <DollarSign className="h-3 w-3" />
                   Per lead
@@ -322,8 +391,12 @@ export function TotalLeadsOverview() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-100">Top Branch</p>
-                <p className="text-xl font-bold text-white">{analytics.topPerformingBranch}</p>
+                <p className="text-sm font-medium text-orange-100">
+                  Top Branch
+                </p>
+                <p className="text-xl font-bold text-white">
+                  {analytics.topPerformingBranch}
+                </p>
                 <p className="text-xs text-orange-200 flex items-center gap-1">
                   <Building2 className="h-3 w-3" />
                   Best performer
@@ -390,7 +463,9 @@ export function TotalLeadsOverview() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white">Date Range</label>
+              <label className="text-sm font-medium text-white">
+                Date Range
+              </label>
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
@@ -413,7 +488,10 @@ export function TotalLeadsOverview() {
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -423,16 +501,28 @@ export function TotalLeadsOverview() {
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4 bg-white/10 border-white/20">
-          <TabsTrigger value="overview" className="text-white data-[state=active]:bg-white/20">
+          <TabsTrigger
+            value="overview"
+            className="text-white data-[state=active]:bg-white/20"
+          >
             Overview
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-white/20">
+          <TabsTrigger
+            value="analytics"
+            className="text-white data-[state=active]:bg-white/20"
+          >
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="details" className="text-white data-[state=active]:bg-white/20">
+          <TabsTrigger
+            value="details"
+            className="text-white data-[state=active]:bg-white/20"
+          >
             Lead Details
           </TabsTrigger>
-          <TabsTrigger value="activity" className="text-white data-[state=active]:bg-white/20">
+          <TabsTrigger
+            value="activity"
+            className="text-white data-[state=active]:bg-white/20"
+          >
             Activity
           </TabsTrigger>
         </TabsList>
@@ -448,15 +538,20 @@ export function TotalLeadsOverview() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {Object.entries(analytics.leadsByStatus).map(([status, count]) => (
-                  <div key={status} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(status)}
-                      <span className="text-white capitalize">{status}</span>
+                {Object.entries(analytics.leadsByStatus).map(
+                  ([status, count]) => (
+                    <div
+                      key={status}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(status)}
+                        <span className="text-white capitalize">{status}</span>
+                      </div>
+                      <Badge className={getStatusColor(status)}>{count}</Badge>
                     </div>
-                    <Badge className={getStatusColor(status)}>{count}</Badge>
-                  </div>
-                ))}
+                  )
+                )}
               </CardContent>
             </Card>
 
@@ -472,7 +567,10 @@ export function TotalLeadsOverview() {
                 {Object.entries(analytics.leadsByType).map(([type, count]) => (
                   <div key={type} className="flex items-center justify-between">
                     <span className="text-white">{type}</span>
-                    <Badge variant="outline" className="border-white/20 text-white">
+                    <Badge
+                      variant="outline"
+                      className="border-white/20 text-white"
+                    >
                       {count}
                     </Badge>
                   </div>
@@ -489,14 +587,22 @@ export function TotalLeadsOverview() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {Object.entries(analytics.leadsBySource).map(([source, count]) => (
-                  <div key={source} className="flex items-center justify-between">
-                    <span className="text-white">{source}</span>
-                    <Badge variant="outline" className="border-white/20 text-white">
-                      {count}
-                    </Badge>
-                  </div>
-                ))}
+                {Object.entries(analytics.leadsBySource).map(
+                  ([source, count]) => (
+                    <div
+                      key={source}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-white">{source}</span>
+                      <Badge
+                        variant="outline"
+                        className="border-white/20 text-white"
+                      >
+                        {count}
+                      </Badge>
+                    </div>
+                  )
+                )}
               </CardContent>
             </Card>
           </div>
@@ -513,20 +619,35 @@ export function TotalLeadsOverview() {
             <CardContent>
               <div className="space-y-4">
                 {analytics.monthlyTrend.map((month, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+                  >
                     <div className="flex items-center gap-3">
                       <Calendar className="h-4 w-4 text-blue-300" />
-                      <span className="text-white font-medium">{month.month}</span>
+                      <span className="text-white font-medium">
+                        {month.month}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="text-white font-semibold">{month.leads} leads</div>
-                        <div className="text-green-300 text-sm">{month.conversions} conversions</div>
+                        <div className="text-white font-semibold">
+                          {month.leads} leads
+                        </div>
+                        <div className="text-green-300 text-sm">
+                          {month.conversions} conversions
+                        </div>
                       </div>
                       <div className="w-20 bg-white/10 rounded-full h-2">
                         <div
                           className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
-                          style={{ width: `${month.leads > 0 ? (month.conversions / month.leads) * 100 : 0}%` }}
+                          style={{
+                            width: `${
+                              month.leads > 0
+                                ? (month.conversions / month.leads) * 100
+                                : 0
+                            }%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -559,7 +680,9 @@ export function TotalLeadsOverview() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    onClick={() =>
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                    }
                     className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                   >
                     {sortOrder === "asc" ? "↑" : "↓"}
@@ -576,9 +699,18 @@ export function TotalLeadsOverview() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-white">{lead.clientName}</h4>
-                        <Badge className={getStatusColor(lead.applicationStatus)}>{lead.applicationStatus}</Badge>
-                        <Badge variant="outline" className="border-white/20 text-white">
+                        <h4 className="font-semibold text-white">
+                          {lead.clientName}
+                        </h4>
+                        <Badge
+                          className={getStatusColor(lead.applicationStatus)}
+                        >
+                          {lead.applicationStatus}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-white/20 text-white"
+                        >
                           {lead.leadType}
                         </Badge>
                       </div>
@@ -598,8 +730,12 @@ export function TotalLeadsOverview() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-white font-semibold">₹{(lead.cost / 100000).toFixed(1)}L</div>
-                      <div className="text-white/70 text-sm">{new Date(lead.createdAt).toLocaleDateString()}</div>
+                      <div className="text-white font-semibold">
+                        ₹{(lead.cost / 100000).toFixed(1)}L
+                      </div>
+                      <div className="text-white/70 text-sm">
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -619,13 +755,22 @@ export function TotalLeadsOverview() {
             <CardContent>
               <div className="space-y-3">
                 {analytics.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5"
+                  >
                     <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <div className="flex-1">
-                      <div className="text-white font-medium">{activity.action}</div>
-                      <div className="text-white/70 text-sm">{activity.lead}</div>
+                      <div className="text-white font-medium">
+                        {activity.action}
+                      </div>
+                      <div className="text-white/70 text-sm">
+                        {activity.lead}
+                      </div>
                     </div>
-                    <div className="text-white/70 text-sm">{new Date(activity.timestamp).toLocaleString()}</div>
+                    <div className="text-white/70 text-sm">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -634,5 +779,5 @@ export function TotalLeadsOverview() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

@@ -1,15 +1,25 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Bell,
   Users,
@@ -25,130 +35,144 @@ import {
   Filter,
   CalendarIcon,
   AlertCircle,
-} from "lucide-react"
-import { getBranches, updateBranchName, getLeads } from "@/lib/auth"
-import type { Branch, Lead } from "@/lib/auth"
-import Image from "next/image"
-import Link from "next/link"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { getBranches, updateBranchName } from "@/services/branch-service";
+import { getLeads } from "@/services/lead-service";
+import { Branch, Lead } from "@/types/common";
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const [branches, setBranches] = useState<Branch[]>([])
-  const [editingBranch, setEditingBranch] = useState<string | null>(null)
-  const [editName, setEditName] = useState("")
-  const [notifications, setNotifications] = useState<Lead[]>([])
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [showTotalLeads, setShowTotalLeads] = useState(false)
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [editingBranch, setEditingBranch] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [notifications, setNotifications] = useState<Lead[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showTotalLeads, setShowTotalLeads] = useState(false);
 
-  const [dateRange, setDateRange] = useState<"today" | "weekly" | "monthly" | "custom">("today")
-  const [customDateFrom, setCustomDateFrom] = useState<Date>()
-  const [customDateTo, setCustomDateTo] = useState<Date>()
-  const [staffFilter, setStaffFilter] = useState<string>("all")
-  const [leadSourceFilter, setLeadSourceFilter] = useState<string>("all")
-  const [showFilters, setShowFilters] = useState(false)
+  const [dateRange, setDateRange] = useState<
+    "today" | "weekly" | "monthly" | "custom"
+  >("today");
+  const [customDateFrom, setCustomDateFrom] = useState<Date>();
+  const [customDateTo, setCustomDateTo] = useState<Date>();
+  const [staffFilter, setStaffFilter] = useState<string>("all");
+  const [leadSourceFilter, setLeadSourceFilter] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (!user) {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
     if (user.type !== "official") {
-      router.push("/employee-dashboard")
-      return
+      router.push("/employee-dashboard");
+      return;
     }
 
-    setBranches(getBranches())
+    setBranches(getBranches());
 
     const recentLeads = getLeads().filter(
-      (lead) => new Date(lead.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000, // Last 24 hours
-    )
-    setNotifications(recentLeads)
-  }, [user, router])
+      (lead) =>
+        new Date(lead.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000 // Last 24 hours
+    );
+    setNotifications(recentLeads);
+  }, [user, router]);
 
   const getFilteredLeads = (branchId?: string) => {
-    let leads = branchId ? getLeads(branchId) : getLeads()
+    let leads = branchId ? getLeads(branchId) : getLeads();
 
     // Apply date filter
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     switch (dateRange) {
       case "today":
         leads = leads.filter((lead) => {
-          const leadDate = new Date(lead.createdAt)
-          return leadDate >= today
-        })
-        break
+          const leadDate = new Date(lead.createdAt);
+          return leadDate >= today;
+        });
+        break;
       case "weekly":
-        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-        leads = leads.filter((lead) => new Date(lead.createdAt) >= weekAgo)
-        break
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        leads = leads.filter((lead) => new Date(lead.createdAt) >= weekAgo);
+        break;
       case "monthly":
-        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
-        leads = leads.filter((lead) => new Date(lead.createdAt) >= monthAgo)
-        break
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+        leads = leads.filter((lead) => new Date(lead.createdAt) >= monthAgo);
+        break;
       case "custom":
         if (customDateFrom && customDateTo) {
           leads = leads.filter((lead) => {
-            const leadDate = new Date(lead.createdAt)
-            return leadDate >= customDateFrom && leadDate <= customDateTo
-          })
+            const leadDate = new Date(lead.createdAt);
+            return leadDate >= customDateFrom && leadDate <= customDateTo;
+          });
         }
-        break
+        break;
     }
 
     // Apply staff filter
     if (staffFilter !== "all") {
-      leads = leads.filter((lead) => lead.assignedAgent === staffFilter)
+      leads = leads.filter((lead) => lead.assignedAgent === staffFilter);
     }
 
     // Apply lead source filter
     if (leadSourceFilter !== "all") {
-      leads = leads.filter((lead) => lead.leadSource === leadSourceFilter)
+      leads = leads.filter((lead) => lead.leadSource === leadSourceFilter);
     }
 
-    return leads
-  }
+    return leads;
+  };
 
   const getBranchStats = (branchId: string) => {
-    const branchLeads = getFilteredLeads(branchId)
+    const branchLeads = getFilteredLeads(branchId);
     return {
       total: branchLeads.length,
       newLeads: branchLeads.filter((lead) => !lead.assignedAgent).length,
-      assignedLeads: branchLeads.filter((lead) => lead.assignedAgent && lead.applicationStatus === "pending").length,
-      sanctioned: branchLeads.filter((lead) => lead.applicationStatus === "sanctioned").length,
-      rejected: branchLeads.filter((lead) => lead.applicationStatus === "rejected").length,
-      processing: branchLeads.filter((lead) => lead.applicationStatus === "pending").length,
-    }
-  }
+      assignedLeads: branchLeads.filter(
+        (lead) => lead.assignedAgent && lead.applicationStatus === "pending"
+      ).length,
+      sanctioned: branchLeads.filter(
+        (lead) => lead.applicationStatus === "sanctioned"
+      ).length,
+      rejected: branchLeads.filter(
+        (lead) => lead.applicationStatus === "rejected"
+      ).length,
+      processing: branchLeads.filter(
+        (lead) => lead.applicationStatus === "pending"
+      ).length,
+    };
+  };
 
   const handleEditBranch = (branchId: string, currentName: string) => {
-    setEditingBranch(branchId)
-    setEditName(currentName)
-  }
+    setEditingBranch(branchId);
+    setEditName(currentName);
+  };
 
   const handleSaveBranch = (branchId: string) => {
     if (updateBranchName(branchId, editName)) {
-      setBranches(getBranches())
-      setEditingBranch(null)
-      setEditName("")
+      setBranches(getBranches());
+      setEditingBranch(null);
+      setEditName("");
     }
-  }
+  };
 
   const handleCancelEdit = () => {
-    setEditingBranch(null)
-    setEditName("")
-  }
+    setEditingBranch(null);
+    setEditName("");
+  };
 
-  const totalFilteredLeads = getFilteredLeads().length
-  const newFilteredLeads = getFilteredLeads().filter((lead) => !lead.assignedAgent).length
+  const totalFilteredLeads = getFilteredLeads().length;
+  const newFilteredLeads = getFilteredLeads().filter(
+    (lead) => !lead.assignedAgent
+  ).length;
 
   if (!user || user.type !== "official") {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   return (
@@ -203,7 +227,9 @@ export default function DashboardPage() {
               {showNotifications && (
                 <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
                   <div className="p-4 border-b border-gray-200">
-                    <h3 className="font-semibold text-gray-900">Recent Leads ({notifications.length})</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      Recent Leads ({notifications.length})
+                    </h3>
                   </div>
                   {notifications.length > 0 ? (
                     <div className="divide-y divide-gray-100">
@@ -211,20 +237,29 @@ export default function DashboardPage() {
                         <div
                           key={lead.id}
                           className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                          onClick={() => router.push(`/dashboard/leads/${lead.branchId}`)}
+                          onClick={() =>
+                            router.push(`/dashboard/leads/${lead.branchId}`)
+                          }
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{lead.clientName}</h4>
-                              <p className="text-sm text-gray-600">{lead.leadType}</p>
+                              <h4 className="font-medium text-gray-900">
+                                {lead.clientName}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {lead.leadType}
+                              </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <Phone className="h-3 w-3 text-gray-400" />
-                                <span className="text-xs text-gray-500">{lead.contactNumber}</span>
+                                <span className="text-xs text-gray-500">
+                                  {lead.contactNumber}
+                                </span>
                               </div>
                             </div>
                             <div className="text-right">
                               <Badge variant="outline" className="text-xs">
-                                {branches.find((b) => b.id === lead.branchId)?.name || "Unknown"}
+                                {branches.find((b) => b.id === lead.branchId)
+                                  ?.name || "Unknown"}
                               </Badge>
                               <p className="text-xs text-gray-500 mt-1">
                                 {new Date(lead.createdAt).toLocaleDateString()}
@@ -246,7 +281,9 @@ export default function DashboardPage() {
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <span className="text-slate-800 font-semibold block">{user.name}</span>
+                <span className="text-slate-800 font-semibold block">
+                  {user.name}
+                </span>
                 <span className="text-gray-600/70 text-sm">Owner Access</span>
               </div>
               <Button
@@ -265,8 +302,13 @@ export default function DashboardPage() {
           <div className="border-t border-gray-200/50 bg-white/90 backdrop-blur-sm p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Date Range</label>
-                <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
+                <label className="text-sm font-medium text-gray-700">
+                  Date Range
+                </label>
+                <Select
+                  value={dateRange}
+                  onValueChange={(value: any) => setDateRange(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -282,42 +324,60 @@ export default function DashboardPage() {
               {dateRange === "custom" && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">From Date</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      From Date
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
                             "justify-start text-left font-normal",
-                            !customDateFrom && "text-muted-foreground",
+                            !customDateFrom && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {customDateFrom ? format(customDateFrom, "PPP") : "Pick a date"}
+                          {customDateFrom
+                            ? format(customDateFrom, "PPP")
+                            : "Pick a date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={customDateFrom} onSelect={setCustomDateFrom} initialFocus />
+                        <Calendar
+                          mode="single"
+                          selected={customDateFrom}
+                          onSelect={setCustomDateFrom}
+                          initialFocus
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">To Date</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      To Date
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
                             "justify-start text-left font-normal",
-                            !customDateTo && "text-muted-foreground",
+                            !customDateTo && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {customDateTo ? format(customDateTo, "PPP") : "Pick a date"}
+                          {customDateTo
+                            ? format(customDateTo, "PPP")
+                            : "Pick a date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={customDateTo} onSelect={setCustomDateTo} initialFocus />
+                        <Calendar
+                          mode="single"
+                          selected={customDateTo}
+                          onSelect={setCustomDateTo}
+                          initialFocus
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -325,7 +385,9 @@ export default function DashboardPage() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Staff Filter</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Staff Filter
+                </label>
                 <Select value={staffFilter} onValueChange={setStaffFilter}>
                   <SelectTrigger>
                     <SelectValue />
@@ -340,8 +402,13 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Lead Source</label>
-                <Select value={leadSourceFilter} onValueChange={setLeadSourceFilter}>
+                <label className="text-sm font-medium text-gray-700">
+                  Lead Source
+                </label>
+                <Select
+                  value={leadSourceFilter}
+                  onValueChange={setLeadSourceFilter}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -416,44 +483,60 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <Card className="backdrop-blur-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-300/30 hover:from-blue-500/20 hover:to-indigo-500/20 transition-all duration-300 transform hover:scale-105 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-blue-700">Total Leads</CardTitle>
+                <CardTitle className="text-sm font-medium text-blue-700">
+                  Total Leads
+                </CardTitle>
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-800">{totalFilteredLeads}</div>
+                <div className="text-3xl font-bold text-slate-800">
+                  {totalFilteredLeads}
+                </div>
                 <p className="text-xs text-blue-600">Filtered results</p>
               </CardContent>
             </Card>
 
             <Card className="backdrop-blur-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-300/30 hover:from-orange-500/20 hover:to-red-500/20 transition-all duration-300 transform hover:scale-105 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-orange-700">New Leads</CardTitle>
+                <CardTitle className="text-sm font-medium text-orange-700">
+                  New Leads
+                </CardTitle>
                 <AlertCircle className="h-6 w-6 text-orange-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-800">{newFilteredLeads}</div>
+                <div className="text-3xl font-bold text-slate-800">
+                  {newFilteredLeads}
+                </div>
                 <p className="text-xs text-orange-600">Awaiting assignment</p>
               </CardContent>
             </Card>
 
             <Card className="backdrop-blur-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-300/30 hover:from-green-500/20 hover:to-emerald-500/20 transition-all duration-300 transform hover:scale-105 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-green-700">Active Branches</CardTitle>
+                <CardTitle className="text-sm font-medium text-green-700">
+                  Active Branches
+                </CardTitle>
                 <Building2 className="h-6 w-6 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-800">{branches.length}</div>
+                <div className="text-3xl font-bold text-slate-800">
+                  {branches.length}
+                </div>
                 <p className="text-xs text-green-600">Operational units</p>
               </CardContent>
             </Card>
 
             <Card className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 to-violet-500/10 border-purple-300/30 hover:from-purple-500/20 hover:to-violet-500/20 transition-all duration-300 transform hover:scale-105 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-purple-700">Notifications</CardTitle>
+                <CardTitle className="text-sm font-medium text-purple-700">
+                  Notifications
+                </CardTitle>
                 <Bell className="h-6 w-6 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-800">{notifications.length}</div>
+                <div className="text-3xl font-bold text-slate-800">
+                  {notifications.length}
+                </div>
                 <p className="text-xs text-purple-600">Recent activity</p>
               </CardContent>
             </Card>
@@ -486,24 +569,38 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-4 rounded-lg bg-blue-50 border border-blue-200">
-                      <div className="text-2xl font-bold text-blue-700">{totalFilteredLeads}</div>
+                      <div className="text-2xl font-bold text-blue-700">
+                        {totalFilteredLeads}
+                      </div>
                       <div className="text-sm text-blue-600">Total Leads</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-green-50 border border-green-200">
                       <div className="text-2xl font-bold text-green-700">
-                        {getFilteredLeads().filter((lead) => lead.applicationStatus === "sanctioned").length}
+                        {
+                          getFilteredLeads().filter(
+                            (lead) => lead.applicationStatus === "sanctioned"
+                          ).length
+                        }
                       </div>
                       <div className="text-sm text-green-600">Sanctioned</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                       <div className="text-2xl font-bold text-yellow-700">
-                        {getFilteredLeads().filter((lead) => lead.applicationStatus === "pending").length}
+                        {
+                          getFilteredLeads().filter(
+                            (lead) => lead.applicationStatus === "pending"
+                          ).length
+                        }
                       </div>
                       <div className="text-sm text-yellow-600">Processing</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-purple-50 border border-purple-200">
                       <div className="text-2xl font-bold text-purple-700">
-                        {getFilteredLeads().filter((lead) => lead.applicationStatus === "disbursed").length}
+                        {
+                          getFilteredLeads().filter(
+                            (lead) => lead.applicationStatus === "disbursed"
+                          ).length
+                        }
                       </div>
                       <div className="text-sm text-purple-600">Disbursed</div>
                     </div>
@@ -512,9 +609,12 @@ export default function DashboardPage() {
                   {/* Branch-wise breakdown */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {branches.map((branch) => {
-                      const stats = getBranchStats(branch.id)
+                      const stats = getBranchStats(branch.id);
                       return (
-                        <div key={branch.id} className="p-4 bg-white/50 rounded-lg border border-purple-200">
+                        <div
+                          key={branch.id}
+                          className="p-4 bg-white/50 rounded-lg border border-purple-200"
+                        >
                           <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
                             {branch.name}
@@ -522,28 +622,39 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-gray-600">Total:</span>
-                              <span className="font-medium text-blue-700">{stats.total}</span>
+                              <span className="font-medium text-blue-700">
+                                {stats.total}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Sanctioned:</span>
-                              <span className="font-medium text-green-700">{stats.sanctioned}</span>
+                              <span className="font-medium text-green-700">
+                                {stats.sanctioned}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Processing:</span>
-                              <span className="font-medium text-yellow-700">{stats.processing}</span>
+                              <span className="font-medium text-yellow-700">
+                                {stats.processing}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">New Leads:</span>
-                              <span className="font-medium text-orange-700">{stats.newLeads}</span>
+                              <span className="font-medium text-orange-700">
+                                {stats.newLeads}
+                              </span>
                             </div>
                           </div>
                           <Link href={`/dashboard/leads/${branch.id}`}>
-                            <Button size="sm" className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white">
+                            <Button
+                              size="sm"
+                              className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white"
+                            >
                               View Details
                             </Button>
                           </Link>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </CardContent>
@@ -552,18 +663,15 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {branches.map((branch, index) => {
-                const stats = getBranchStats(branch.id)
-                const branchLeads = getFilteredLeads(branch.id)
+                const stats = getBranchStats(branch.id);
+                const branchLeads = getFilteredLeads(branch.id);
 
                 // Group leads by loan type
-                const leadsByType = branchLeads.reduce(
-                  (acc, lead) => {
-                    const type = lead.leadType || "other"
-                    acc[type] = (acc[type] || 0) + 1
-                    return acc
-                  },
-                  {} as Record<string, number>,
-                )
+                const leadsByType = branchLeads.reduce((acc, lead) => {
+                  const type = lead.leadType || "other";
+                  acc[type] = (acc[type] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>);
 
                 return (
                   <Card
@@ -617,7 +725,9 @@ export default function DashboardPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleEditBranch(branch.id, branch.name)}
+                              onClick={() =>
+                                handleEditBranch(branch.id, branch.name)
+                              }
                               className="text-slate-600 hover:bg-slate-100"
                             >
                               <Edit2 className="h-4 w-4" />
@@ -630,32 +740,52 @@ export default function DashboardPage() {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="text-center p-2 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-sm font-bold text-blue-700">{stats.total}</div>
+                            <div className="text-sm font-bold text-blue-700">
+                              {stats.total}
+                            </div>
                             <div className="text-xs text-blue-600">Total</div>
                           </div>
                           <div className="text-center p-2 rounded-lg bg-orange-50 border border-orange-200">
-                            <div className="text-sm font-bold text-orange-700">{stats.newLeads}</div>
-                            <div className="text-xs text-orange-600">New Leads</div>
+                            <div className="text-sm font-bold text-orange-700">
+                              {stats.newLeads}
+                            </div>
+                            <div className="text-xs text-orange-600">
+                              New Leads
+                            </div>
                           </div>
                           <div className="text-center p-2 rounded-lg bg-green-50 border border-green-200">
-                            <div className="text-sm font-bold text-green-700">{stats.sanctioned}</div>
-                            <div className="text-xs text-green-600">Sanctioned</div>
+                            <div className="text-sm font-bold text-green-700">
+                              {stats.sanctioned}
+                            </div>
+                            <div className="text-xs text-green-600">
+                              Sanctioned
+                            </div>
                           </div>
                           <div className="text-center p-2 rounded-lg bg-red-50 border border-red-200">
-                            <div className="text-sm font-bold text-red-700">{stats.rejected}</div>
+                            <div className="text-sm font-bold text-red-700">
+                              {stats.rejected}
+                            </div>
                             <div className="text-xs text-red-600">Rejected</div>
                           </div>
                         </div>
 
                         {Object.keys(leadsByType).length > 0 && (
                           <div className="border-t pt-3">
-                            <h5 className="text-xs font-medium text-gray-600 mb-2">Loan Categories:</h5>
+                            <h5 className="text-xs font-medium text-gray-600 mb-2">
+                              Loan Categories:
+                            </h5>
                             <div className="flex flex-wrap gap-1">
-                              {Object.entries(leadsByType).map(([type, count]) => (
-                                <Badge key={type} variant="outline" className="text-xs">
-                                  {type.replace("_", " ")}: {count}
-                                </Badge>
-                              ))}
+                              {Object.entries(leadsByType).map(
+                                ([type, count]) => (
+                                  <Badge
+                                    key={type}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {type.replace("_", " ")}: {count}
+                                  </Badge>
+                                )
+                              )}
                             </div>
                           </div>
                         )}
@@ -669,12 +799,12 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
             </div>
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }
