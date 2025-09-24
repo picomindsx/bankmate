@@ -180,3 +180,90 @@ export interface StaffMember extends User {
   permissions?: Permission[];
   isActive: boolean;
 }
+
+// ---------------- Loan Application / KYC Form ----------------
+export interface LeadApplication {
+  id: string;
+  clientName: string;
+  contactNumber: string;
+  email: string;
+  dateOfBirth: string;
+  gender: string;
+  address: string;
+  panNumber: string;
+  aadharNumber: string;
+
+  // Loan Information
+  loanTypes: string[];
+  incomeCategory: string;
+  employmentType: string;
+  companyName: string;
+  designation: string;
+  workExperience: string;
+  monthlyIncome: string;
+  loanAmount: string;
+  loanPurpose: string;
+
+  // Property Info
+  propertyType: string;
+  propertyLocation: string;
+  propertyValue: string;
+
+  // Source & Assignment
+  leadSource: string;
+  assignedBranch: string;
+  assignedTo: string;
+  createdBy: string;
+
+  // Status Lifecycle
+  status: "new" | "assigned" | "in-progress" | "sanctioned" | "rejected";
+  createdAt: string;
+
+  // Documents
+  documents: {
+    type: string;
+    requirementId: string;
+    status: "pending" | "provided" | "verified";
+  }[];
+
+  // Optional Fields
+  permanentAddress?: string;
+  currentAddress?: string;
+  otherLoanType?: string;
+  employerName?: string;
+  officeAddress?: string;
+  monthlyGrossSalary?: string;
+  yearsOfExperience?: string;
+  businessName?: string;
+  businessType?: string;
+  businessAddress?: string;
+  annualTurnover?: string;
+  yearsInBusiness?: string;
+  countryOfResidence?: string;
+  jobTypeNRI?: string;
+  annualIncomeFC?: string;
+  loanTenure?: string;
+  preferredBank?: string;
+  urgencyLevel?: string;
+  purpose?: string;
+
+  propertyDetails?: {
+    type?: string;
+    value?: string;
+    location?: string;
+  };
+
+  // Carryover from workflow
+  leadType?: string;
+  cibilScore?: string;
+  ownerManagerAssignment?: string;
+  applicationStatus?: string;
+  documentsSubmittedAt?: string;
+  statusUpdatedAt?: string;
+
+  assignedStaff?: string;
+  selectedBank?: string;
+
+  // Edit Tracking
+  editHistory?: { editedBy: string; editedAt: string; changes: string[] }[];
+}

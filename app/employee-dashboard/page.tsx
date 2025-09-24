@@ -55,85 +55,12 @@ import {
   updateLead,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
+import { LeadApplication as Lead } from "@/types/common";
 
 interface CustomOption {
   id: string;
   value: string;
   type: "gender" | "loanType" | "incomeCategory";
-}
-
-interface Lead {
-  id: string;
-  clientName: string;
-  contactNumber: string;
-  email: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  panNumber: string;
-  aadharNumber: string;
-  loanTypes: string[];
-  incomeCategory: string;
-  employmentType: string;
-  companyName: string;
-  designation: string;
-  workExperience: string;
-  monthlyIncome: string;
-  loanAmount: string;
-  loanPurpose: string;
-  propertyType: string;
-  propertyLocation: string;
-  propertyValue: string;
-  leadSource: string;
-  assignedBranch: string;
-  notes: string;
-  status: "new" | "assigned" | "in-progress" | "sanctioned" | "rejected";
-  assignedTo: string;
-  createdBy: string;
-  createdAt: string;
-  documents: { [key: string]: boolean };
-  // New fields for lead generation form
-  permanentAddress?: string;
-  currentAddress?: string;
-  otherLoanType?: string;
-  employerName?: string;
-  officeAddress?: string;
-  monthlyGrossSalary?: string;
-  yearsOfExperience?: string;
-  businessName?: string;
-  businessType?: string;
-  businessAddress?: string;
-  annualTurnover?: string;
-  yearsInBusiness?: string;
-  countryOfResidence?: string;
-  jobTypeNRI?: string;
-  annualIncomeFC?: string;
-  loanTenure?: string;
-  preferredBank?: string;
-  urgencyLevel?: string;
-  purpose?: string;
-  propertyDetails?: {
-    type?: string;
-    value?: string;
-    location?: string;
-  };
-  // Fields from existing Lead interface that might be used in the new form
-  leadType?: string; // Assuming this maps to loanTypes or a primary loan type
-  cibilScore?: string;
-  ownerManagerAssignment?: string;
-  applicationStatus?: string; // Assuming this maps to status
-  documentsSubmittedAt?: string;
-  statusUpdatedAt?: string;
-  // Updated documents structure to match backend/frontend needs
-  documents?: {
-    type: string;
-    requirementId: string;
-    status: "pending" | "provided" | "verified";
-  }[];
-  // Added fields for assignment and edit history
-  assignedStaff?: string;
-  editHistory?: { editedBy: string; editedAt: string; changes: string[] }[];
-  selectedBank?: string; // Added for selected bank in assignment
 }
 
 const EmployeeDashboard = () => {
@@ -628,7 +555,7 @@ const EmployeeDashboard = () => {
       assignedLeads.length,
       "assigned leads"
     );
-  }, [user, router]);
+  }, [user]);
 
   const handleLoanTypeChange = (loanType: string, checked: boolean) => {
     if (checked) {
