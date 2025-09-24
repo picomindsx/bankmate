@@ -71,45 +71,6 @@ export const resetPassword = async (
   return true;
 };
 
-export const login = (username: string, password: string): User | null => {
-  // Official login (username and password)
-  const user = users.find((u) => u.username === username);
-
-  if (user && user.password === password) {
-    user.lastLogin = new Date().toISOString();
-    console.log("[v0] User authenticated:", user.name || "official owner");
-    return user;
-  }
-
-  // Employee login (phone number and password) - Enhanced for staff to access employer features
-  const employee = staff.find((s) => s.phone === username && s.isActive);
-  console.log(
-    "[v0] Looking for staff with phone:",
-    username,
-    "Found:",
-    !!employee
-  );
-
-  if (employee) {
-    console.log("[v0] Staff found, checking password:", {
-      stored: employee.password,
-      provided: password,
-    });
-    if (employee.password === password || employee.password === username) {
-      employee.lastLogin = new Date().toISOString();
-      employee.canAccessEmployerLogin = true;
-      console.log(
-        "[v0] Staff authenticated with employer access:",
-        employee.name
-      );
-      return employee;
-    }
-  }
-
-  console.log("[v0] Authentication failed for username:", username);
-  return null;
-};
-
 export const hasPermission = (user: User, permissionId: string): boolean => {
   if (user.role === "owner") return true;
 
