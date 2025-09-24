@@ -1,8 +1,16 @@
 import { branches } from "@/lib/consts";
+import { supabase } from "@/lib/supabase";
 import { Branch } from "@/types/common";
 
 // Branch management
-export const getBranches = (): Branch[] => branches;
+export const getBranches = async (): Promise<Branch[]> => {
+  const branchList = await supabase.from("branches").select("*");
+  if (branchList.error) {
+    console.error("Error fetching branches:", branchList.error);
+    return [];
+  }
+  return branchList.data as Branch[];
+};
 
 export const updateBranchName = (
   branchId: string,

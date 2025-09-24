@@ -83,7 +83,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
 
   useEffect(() => {
     setStaff(getStaff());
-    setBranches(getBranches());
+    getBranches().then((branchList) => setBranches(branchList));
   }, []);
 
   const canManageStaff =

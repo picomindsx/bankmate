@@ -21,11 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
 import { addStaff } from "@/services/staff-service";
+import { Branch, User } from "@/types/common";
 
 export default function AddStaffPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [branches, setBranches] = useState<any[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -40,12 +41,16 @@ export default function AddStaffPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    const branchList = getBranches();
+  const fetchBranches = async () => {
+    const branchList = await getBranches();
     setBranches(branchList);
     if (branchList.length > 0) {
       setFormData((prev) => ({ ...prev, branchId: branchList[0].id }));
     }
+  };
+
+  useEffect(() => {
+    fetchBranches();
   }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +89,7 @@ export default function AddStaffPage() {
         designation: formData.designation,
         photo: formData.photo,
         branchId: formData.branchId,
-      });
+      } as User);
 
       setSuccess("Staff member added successfully!");
       setTimeout(() => {
@@ -235,7 +240,7 @@ export default function AddStaffPage() {
                   }
                   className="w-full px-3 py-2 border rounded-md bg-background"
                 >
-                  {branches.map((branch) => (
+                  {branches?.map((branch) => (
                     <option key={branch.id} value={branch.id}>
                       {branch.name}
                     </option>

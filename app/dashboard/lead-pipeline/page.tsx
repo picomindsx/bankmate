@@ -392,7 +392,7 @@ export default function LeadPipelinePage() {
       return;
     }
 
-    setBranches(getBranches());
+    getBranches().then((branchList) => setBranches(branchList));
     setLeads(getLeads());
     setStaff(getStaff().filter((s) => s.isActive));
   }, [user, router]);

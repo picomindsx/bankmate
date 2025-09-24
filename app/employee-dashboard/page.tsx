@@ -495,7 +495,7 @@ const EmployeeDashboard = () => {
 
     const assignedLeads = getAssignedLeads(user.id);
     setMyLeads(assignedLeads);
-    setBranches(getBranches());
+    getBranches().then((branchList) => setBranches(branchList));
     console.log(
       "[v0] Employee dashboard loaded for:",
       user.name,

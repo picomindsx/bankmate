@@ -129,13 +129,16 @@ export default function LeadManagementPage() {
       return;
     }
 
-    const branches = getBranches();
-    const currentBranch = branches.find((b) => b.id === branchId);
-    if (currentBranch) {
-      setBranch(currentBranch);
-      setLeads(getLeads(branchId));
-      setStaff(getStaff().filter((s) => s.branchId === branchId && s.isActive));
-    }
+    getBranches().then((branches) => {
+      const currentBranch = branches.find((b) => b.id === branchId);
+      if (currentBranch) {
+        setBranch(currentBranch);
+        setLeads(getLeads(branchId));
+        setStaff(
+          getStaff().filter((s) => s.branchId === branchId && s.isActive)
+        );
+      }
+    });
   }, [user, router, branchId]);
 
   const filteredLeads = leads.filter((lead) => {
