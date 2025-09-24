@@ -134,9 +134,10 @@ export default function LeadManagementPage() {
       if (currentBranch) {
         setBranch(currentBranch);
         setLeads(getLeads(branchId));
-        setStaff(
-          getStaff().filter((s) => s.branchId === branchId && s.isActive)
-        );
+
+        getStaff().then((staffList) => {
+          setStaff(staffList.filter((s) => s.isActive));
+        });
       }
     });
   }, [user, router, branchId]);

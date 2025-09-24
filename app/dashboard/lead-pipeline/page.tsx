@@ -394,7 +394,10 @@ export default function LeadPipelinePage() {
 
     getBranches().then((branchList) => setBranches(branchList));
     setLeads(getLeads());
-    setStaff(getStaff().filter((s) => s.isActive));
+
+    getStaff().then((staffList) =>
+      setStaff(staffList.filter((s) => s.isActive))
+    );
   }, [user, router]);
 
   const filteredLeads = leads.filter((lead) => {

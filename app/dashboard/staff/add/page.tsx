@@ -53,16 +53,6 @@ export default function AddStaffPage() {
     fetchBranches();
   }, []);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-      // Create a temporary URL for preview
-      const photoUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, photo: photoUrl }));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -89,6 +79,7 @@ export default function AddStaffPage() {
         designation: formData.designation,
         photo: formData.photo,
         branchId: formData.branchId,
+        password: formData.password,
       } as User);
 
       setSuccess("Staff member added successfully!");
@@ -254,10 +245,12 @@ export default function AddStaffPage() {
                   <div className="flex-1">
                     <Input
                       id="photo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="cursor-pointer"
+                      type="text"
+                      placeholder="paste image URL here"
+                      value={formData.photo}
+                      onChange={(e) =>
+                        handleInputChange("photo", e.target.value)
+                      }
                     />
                   </div>
                   {formData.photo && (

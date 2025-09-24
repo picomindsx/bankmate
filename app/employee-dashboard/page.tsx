@@ -430,12 +430,13 @@ const EmployeeDashboard = () => {
     return false;
   };
 
-  const handleReassignLead = (leadId: string, newStaffId: string) => {
+  const handleReassignLead = async (leadId: string, newStaffId: string) => {
     const lead = myLeads.find((l) => l.id === leadId);
     if (lead && user) {
+      const staffList = await getStaff();
       const updatedLead = {
         ...lead,
-        assignedStaff: getStaff().find((s) => s.id === newStaffId)?.name || "",
+        assignedStaff: staffList.find((s) => s.id === newStaffId)?.name || "",
         ownerManagerAssignment: `${user.name} (${user.role})`,
         updatedAt: new Date().toISOString(),
         editHistory: [
@@ -2015,13 +2016,17 @@ const EmployeeDashboard = () => {
                   <SelectValue placeholder="Choose staff member" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getStaff()
-                    .filter((s) => s.isActive)
-                    .map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name} - {member.designation}
-                      </SelectItem>
-                    ))}
+                  {
+                    getStaff().then((staffList) =>
+                      staffList
+                        .filter((s) => s.isActive)
+                        .map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name} - {member.designation}
+                          </SelectItem>
+                        ))
+                    ) // Fetch latest staff list
+                  }
                 </SelectContent>
               </Select>
             </div>

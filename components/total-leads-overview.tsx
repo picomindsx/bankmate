@@ -31,7 +31,7 @@ import {
 import { getBranches } from "@/services/branch-service";
 import { getLeads } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Branch, Lead } from "@/types/common";
+import { Branch, Lead, User } from "@/types/common";
 
 interface LeadAnalytics {
   totalLeads: number;
@@ -61,11 +61,12 @@ export function TotalLeadsOverview() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [branches, setBranches] = useState([] as Branch[]);
-  const staff = getStaff();
+  const [staff, setStaff] = useState([] as User[]);
   const allLeads = getLeads();
 
   useEffect(() => {
     getBranches().then((branchList) => setBranches(branchList));
+    getStaff().then((staffList) => setStaff(staffList));
   }, []);
 
   const analytics: LeadAnalytics = useMemo(() => {

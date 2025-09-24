@@ -107,8 +107,7 @@ export default function AddLeadPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [branch, setBranch] = useState();
-
-  const staff = getStaff();
+  const [staff, setStaff] = useState();
 
   const banks = [
     "State Bank of India (SBI)",
@@ -227,6 +226,7 @@ export default function AddLeadPage() {
       const currentBranch: Branch = branches.find((b) => b.id === branchId);
       setBranch(currentBranch);
     });
+    getStaff().then((staffList) => setStaff(staffList));
   }, []);
 
   if (!user || user.type !== "official" || !branch) {

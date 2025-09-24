@@ -22,7 +22,7 @@ import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
 import { addLead } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Branch } from "@/types/common";
+import { Branch, User } from "@/types/common";
 
 export default function AddLeadPage() {
   const router = useRouter();
@@ -58,12 +58,14 @@ export default function AddLeadPage() {
   });
 
   const [branches, setBranches] = useState([] as Branch[]);
+  const [staffMembers, setStaffMembers] = useState([] as User[]);
 
   useEffect(() => {
     getBranches().then((branchList) => setBranches(branchList));
+    getStaff().then((staffList) =>
+      setStaffMembers(staffList.filter((s) => s.isActive))
+    );
   }, []);
-
-  const staffMembers = getStaff().filter((s) => s.isActive);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

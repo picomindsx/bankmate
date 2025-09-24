@@ -40,7 +40,7 @@ import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
 import { getLeads } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Branch } from "@/types/common";
+import { Branch, User } from "@/types/common";
 
 export default function ReportsPage() {
   const { user, logout } = useAuth();
@@ -57,12 +57,13 @@ export default function ReportsPage() {
   }, [user, router]);
 
   const leads = getLeads();
-  const staff = getStaff();
 
   const [branches, setBranches] = useState([] as Branch[]);
+  const [staff, setStaff] = useState([] as User[]);
 
   useEffect(() => {
     getBranches().then((branchList) => setBranches(branchList));
+    getStaff().then((staffList) => setStaff(staffList));
   }, []);
 
   const getStaffPerformance = (

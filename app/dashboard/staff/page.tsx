@@ -42,13 +42,14 @@ export default function StaffManagementPage() {
       return;
     }
 
-    setStaff(getStaff());
+    getStaff().then((staffList) => setStaff(staffList));
   }, [user, router]);
 
-  const handleDeleteStaff = (staffId: string) => {
+  const handleDeleteStaff = async (staffId: string) => {
     if (confirm("Are you sure you want to delete this staff member?")) {
-      if (deleteStaff(staffId)) {
-        setStaff(getStaff());
+      const success = await deleteStaff(staffId);
+      if (success) {
+        getStaff().then((staffList) => setStaff(staffList));
       }
     }
   };
