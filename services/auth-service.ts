@@ -1,0 +1,155 @@
+import { users, staff, ALL_PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/consts";
+import { Permission, User } from "@/types/common";
+
+export const authenticateUser = (
+  username: string,
+  password: string
+): User | null => {
+  // Official login credentials
+  if (username === "Ajith6235" && password === "Ajith@6235") {
+    const user = users.find(
+      (u) => u.username === username && u.type === "official"
+    );
+    if (user) {
+      user.lastLogin = new Date().toISOString();
+      console.log("[v0] User authenticated:", user.name || "official owner");
+      return user;
+    }
+  }
+
+  // Employee login (phone number and password)
+  const employee = staff.find((s) => s.phone === username && s.isActive);
+  console.log(
+    "[v0] Looking for employee with phone:",
+    username,
+    "Found:",
+    !!employee
+  );
+
+  if (employee) {
+    console.log("[v0] Employee found, checking password:", {
+      stored: employee.password,
+      provided: password,
+    });
+    if (employee.password === password || employee.password === username) {
+      employee.lastLogin = new Date().toISOString();
+      console.log("[v0] Employee authenticated:", employee.name);
+      return employee;
+    }
+  }
+
+  console.log("[v0] Authentication failed for username:", username);
+  return null;
+};
+
+export const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+export const verifyOTP = (otp: string, expectedOTP: string): boolean => {
+  return otp === expectedOTP;
+};
+
+export const resetPassword = (
+  username: string,
+  newPassword: string
+): boolean => {
+  const userIndex = users.findIndex((u) => u.username === username);
+  if (userIndex !== -1) {
+    // In a real app, you'd hash the password
+    users[userIndex].password = newPassword;
+    return true;
+  }
+
+  const staffIndex = staff.findIndex((s) => s.phone === username);
+  if (staffIndex !== -1) {
+    // In a real app, you'd hash the password
+    staff[staffIndex].password = newPassword;
+    return true;
+  }
+
+  return false;
+};
+
+export const login = (username: string, password: string): User | null => {
+  // Official login (username and password)
+  const user = users.find((u) => u.username === username);
+
+  if (user && user.password === password) {
+    user.lastLogin = new Date().toISOString();
+    console.log("[v0] User authenticated:", user.name || "official owner");
+    return user;
+  }
+
+  // Employee login (phone number and password) - Enhanced for staff to access employer features
+  const employee = staff.find((s) => s.phone === username && s.isActive);
+  console.log(
+    "[v0] Looking for staff with phone:",
+    username,
+    "Found:",
+    !!employee
+  );
+
+  if (employee) {
+    console.log("[v0] Staff found, checking password:", {
+      stored: employee.password,
+      provided: password,
+    });
+    if (employee.password === password || employee.password === username) {
+      employee.lastLogin = new Date().toISOString();
+      employee.canAccessEmployerLogin = true;
+      console.log(
+        "[v0] Staff authenticated with employer access:",
+        employee.name
+      );
+      return employee;
+    }
+  }
+
+  console.log("[v0] Authentication failed for username:", username);
+  return null;
+};
+
+export const hasPermission = (user: User, permissionId: string): boolean => {
+  if (user.role === "owner") return true;
+
+  const rolePermissions = ROLE_PERMISSIONS.find((rp) => rp.role === user.role);
+  return rolePermissions?.permissions.includes(permissionId) || false;
+};
+
+export const getUserPermissions = (user: User): Permission[] => {
+  if (user.role === "owner") return ALL_PERMISSIONS;
+
+  const rolePermissions = ROLE_PERMISSIONS.find((rp) => rp.role === user.role);
+  if (!rolePermissions) return [];
+
+  return ALL_PERMISSIONS.filter((p) =>
+    rolePermissions.permissions.includes(p.id)
+  );
+};
+
+export const canAccessResource = (
+  user: User,
+  resource: string,
+  action: string
+): boolean => {
+  const permissionId = `${resource}.${action}`;
+  return hasPermission(user, permissionId);
+};
+
+export const getUserStatistics = () => {
+  const activeStaff = staff.filter((s) => s.isActive);
+
+  return {
+    totalUsers: users.length + staff.length,
+    activeStaff: activeStaff.length,
+    inactiveStaff: staff.length - activeStaff.length,
+    owners:
+      users.filter((u) => u.role === "owner").length +
+      activeStaff.filter((s) => s.role === "owner").length,
+    branchHeads: activeStaff.filter((s) => s.role === "branch_head").length,
+    managers: activeStaff.filter((s) => s.role === "manager").length,
+    admins: activeStaff.filter((s) => s.role === "admin").length,
+    staff: activeStaff.filter((s) => s.role === "staff").length,
+  };
+};
