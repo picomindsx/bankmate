@@ -37,11 +37,6 @@ export default function StaffManagementPage() {
   const [selectedDesignation, setSelectedDesignation] = useState("all");
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getStaff().then((staffList) => setStaff(staffList));
   }, [user, router]);
 

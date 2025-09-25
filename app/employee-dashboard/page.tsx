@@ -482,18 +482,6 @@ const EmployeeDashboard = () => {
   };
 
   useEffect(() => {
-    if (!user) {
-      console.log("[v0] No user found, redirecting to login");
-      router.push("/");
-      return;
-    }
-
-    if (user.type !== "employee") {
-      console.log("[v0] User is not employee, redirecting to main dashboard");
-      router.push("/dashboard");
-      return;
-    }
-
     const assignedLeads = getAssignedLeads(user.id);
     setMyLeads(assignedLeads);
     getBranches().then((branchList) => setBranches(branchList));

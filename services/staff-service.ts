@@ -31,7 +31,7 @@ export const addStaff = async (
     .single();
 
   if (userError) {
-    toast.error("Error adding staff");
+    toast.error("Error adding staff", { description: userError.details });
     console.error(userError);
     return null;
   }
@@ -120,7 +120,7 @@ export const updateStaff = async (
     .single();
 
   if (userError) {
-    toast.error("Error updating staff");
+    toast.error("Error updating staff", { description: userError.details });
     console.error(userError);
     return false;
   }

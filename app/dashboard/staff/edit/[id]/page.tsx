@@ -55,11 +55,6 @@ export default function EditStaffPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getStaffById(staffId).then((member) => {
       if (member) {
         setStaffMember(member);

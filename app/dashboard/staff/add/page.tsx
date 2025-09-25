@@ -71,7 +71,7 @@ export default function AddStaffPage() {
         return;
       }
 
-      const newStaff = addStaff({
+      const newStaff = await addStaff({
         username: formData.phone, // Use phone as username for employee login
         name: formData.name,
         phone: formData.phone,
@@ -81,6 +81,11 @@ export default function AddStaffPage() {
         branchId: formData.branchId,
         password: formData.password,
       } as User);
+
+      if (newStaff === null) {
+        setError("Failed to add staff member. Please try again.");
+        return;
+      }
 
       setSuccess("Staff member added successfully!");
       setTimeout(() => {
@@ -96,11 +101,6 @@ export default function AddStaffPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-  if (!user || user.type !== "official") {
-    router.push("/");
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen bg-background">

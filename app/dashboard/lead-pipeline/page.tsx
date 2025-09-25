@@ -387,11 +387,6 @@ export default function LeadPipelinePage() {
   );
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getBranches().then((branchList) => setBranches(branchList));
     setLeads(getLeads());
 

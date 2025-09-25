@@ -124,11 +124,6 @@ export default function LeadManagementPage() {
   ];
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getBranches().then((branches) => {
       const currentBranch = branches.find((b) => b.id === branchId);
       if (currentBranch) {
