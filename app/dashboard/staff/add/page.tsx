@@ -133,7 +133,7 @@ export default function AddStaffPage() {
               <Bell className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{user.name}</span>
+              <span className="text-sm font-medium">{user?.name}</span>
               <Button variant="outline" size="sm" onClick={logout}>
                 Logout
               </Button>
