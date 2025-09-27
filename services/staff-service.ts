@@ -76,6 +76,16 @@ export const getStaff = async (): Promise<User[]> => {
   return staffList as User[];
 };
 
+export const getAllStaff = async (): Promise<User[]> => {
+  const { data: staffList, error } = await supabase.from("users").select("*");
+
+  if (error) {
+    console.error("Error fetching staff:", error);
+    return [];
+  }
+  return staffList as User[];
+};
+
 export const getStaffById = async (id: string): Promise<User | null> => {
   const { data: staff, error } = await supabase
     .from("users")

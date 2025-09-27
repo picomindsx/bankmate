@@ -1,6 +1,40 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
+}
+
+function camelToSnake(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+function snakeToCamel(key: string): string {
+  return key.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+}
+
+// Convert a DB row (snake_case) → camelCase object
+export function mapDbRow<T = any>(dbRow: Record<string, any>): T {
+  const mapped: any = {};
+  for (const [key, value] of Object.entries(dbRow)) {
+    mapped[snakeToCamel(key)] = value;
+  }
+  return mapped as T;
+}
+
+// Convert a camelCase form object → snake_case for DB
+export function mapFormRow<T = any>(formRow: Record<string, any>): T {
+  const mapped: any = {};
+  for (const [key, value] of Object.entries(formRow)) {
+    mapped[camelToSnake(key)] = value;
+  }
+  return mapped as T;
+}
+
+export function mapDbList<T = any>(rows: Record<string, any>[]): T[] {
+  return rows.map(mapDbRow);
+}
+
+export function mapFormList<T = any>(rows: Record<string, any>[]): T[] {
+  return rows.map(mapFormRow);
 }
