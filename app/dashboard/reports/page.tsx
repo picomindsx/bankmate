@@ -49,13 +49,6 @@ export default function ReportsPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-  }, [user, router]);
-
   const leads = getLeads();
 
   const [branches, setBranches] = useState([] as Branch[]);

@@ -56,9 +56,12 @@ import {
   getLeads,
   assignLeadToStaff,
   updateLead,
+  getBranchLeads,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Lead, Branch } from "@/types/common";
+import { Branch, Lead, LeadForm } from "@/types/common";
+import { getDocumentCompletionStatus } from "@/services/document-service";
+import LeadDetailView from "@/components/lead-detail-view";
 
 export default function LeadManagementPage() {
   const { user, logout } = useAuth();
@@ -66,7 +69,7 @@ export default function LeadManagementPage() {
   const params = useParams();
   const branchId = params.branchId as string;
 
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<LeadForm[]>([]);
   const [branch, setBranch] = useState<Branch | null>(null);
   const [staff, setStaff] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,7 +77,7 @@ export default function LeadManagementPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [documentFilter, setDocumentFilter] = useState("all");
   const [assignmentFilter, setAssignmentFilter] = useState("all");
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<LeadForm | null>(null);
   const [showPipelineView, setShowPipelineView] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showFileTracker, setShowFileTracker] = useState(false);
@@ -104,7 +107,7 @@ export default function LeadManagementPage() {
   const [newCustomBankName, setNewCustomBankName] = useState("");
 
   // State for edit form
-  const [editFormData, setEditFormData] = useState<Partial<Lead>>({});
+  const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
 
   const banks = [
     "State Bank of India (SBI)",
@@ -124,16 +127,11 @@ export default function LeadManagementPage() {
   ];
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getBranches().then((branches) => {
       const currentBranch = branches.find((b) => b.id === branchId);
       if (currentBranch) {
         setBranch(currentBranch);
-        setLeads(getLeads(branchId));
+        getBranchLeads(branchId).then((branchLeads) => setLeads(branchLeads));
 
         getStaff().then((staffList) => {
           setStaff(staffList.filter((s) => s.isActive));
@@ -144,35 +142,23 @@ export default function LeadManagementPage() {
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch =
-      lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.contactNumber.includes(searchTerm) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.clientName!.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.contactNumber!.includes(searchTerm) ||
+      lead.email!.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (lead.leadName &&
         lead.leadName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesDate =
       !dateFilter ||
-      new Date(lead.createdAt).toDateString() ===
+      new Date(lead.createdAt!).toDateString() ===
         new Date(dateFilter).toDateString();
     const matchesStatus =
       statusFilter === "all" || lead.applicationStatus === statusFilter;
-    const matchesDocument =
-      documentFilter === "all" ||
-      (lead.documents &&
-        lead.documents.some((doc) => doc.status === documentFilter));
+
     const matchesAssignment =
       assignmentFilter === "all" ||
-      (assignmentFilter === "assigned" &&
-        lead.assignedStaff &&
-        lead.isVisibleToStaff) ||
-      (assignmentFilter === "unassigned" &&
-        (!lead.assignedStaff || !lead.isVisibleToStaff));
-    return (
-      matchesSearch &&
-      matchesDate &&
-      matchesStatus &&
-      matchesDocument &&
-      matchesAssignment
-    );
+      (assignmentFilter === "assigned" && lead.assignedStaff) ||
+      (assignmentFilter === "unassigned" && !lead.assignedStaff);
+    return matchesSearch && matchesDate && matchesStatus && matchesAssignment;
   });
 
   const loginLeads = leads.filter((lead) => lead.applicationStatus === "login");
@@ -196,13 +182,13 @@ export default function LeadManagementPage() {
     if (!selectedLead || !selectedStaffId || !user) return;
 
     const success = assignLeadToStaff(
-      selectedLead.id,
+      selectedLead.id!,
       selectedStaffId,
       user,
       selectedBank
     );
     if (success) {
-      setLeads(getLeads(branchId));
+      getBranchLeads(branchId).then((branchLeads) => setLeads(branchLeads));
       setShowAssignDialog(false);
       setSelectedLead(null);
       setSelectedStaffId("");
@@ -290,8 +276,8 @@ export default function LeadManagementPage() {
           lead.leadType,
           lead.assignedStaff,
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
     ].join("\n");
@@ -306,25 +292,7 @@ export default function LeadManagementPage() {
     a.click();
   };
 
-  const getDocumentCompletionStatus = (lead: Lead) => {
-    if (!lead.documents || lead.documents.length === 0) return "No Documents";
-    const totalDocs = lead.documents.length;
-    const verifiedDocs = lead.documents.filter(
-      (doc) => doc.status === "verified"
-    ).length;
-    const providedDocs = lead.documents.filter(
-      (doc) => doc.status === "provided"
-    ).length;
-    const pendingDocs = lead.documents.filter(
-      (doc) => doc.status === "pending"
-    ).length;
-
-    if (verifiedDocs === totalDocs) return "Document Complete";
-    if (providedDocs + verifiedDocs === totalDocs) return "Under Review";
-    return `${pendingDocs} Pending`;
-  };
-
-  const getLeadTimeline = (lead: Lead) => {
+  const getLeadTimeline = (lead: LeadForm) => {
     const timeline = [
       {
         stage: "Lead Created",
@@ -332,18 +300,11 @@ export default function LeadManagementPage() {
         status: "completed",
         icon: Plus,
       },
-      {
-        stage: "Documents Submitted",
-        date: lead.documentsSubmittedAt || null,
-        status: lead.documents?.some((doc) => doc.status !== "pending")
-          ? "completed"
-          : "pending",
-        icon: FileText,
-      },
+
       {
         stage: "Bank Assignment",
         date: lead.bankAssignedAt || null,
-        status: lead.selectedBank ? "completed" : "pending",
+        status: lead.bankSelection ? "completed" : "pending",
         icon: Building2,
       },
       {
@@ -430,22 +391,12 @@ export default function LeadManagementPage() {
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-300">
                             <Building2 className="h-3 w-3" />
-                            {lead.selectedBank || "No Bank"}
+                            {lead.bankSelection || "No Bank"}
                           </div>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${
-                              getDocumentCompletionStatus(lead) ===
-                              "Document Complete"
-                                ? "bg-green-500/20 text-green-300 border-green-400/30"
-                                : "bg-orange-500/20 text-orange-300 border-orange-400/30"
-                            }`}
-                          >
-                            {getDocumentCompletionStatus(lead)}
-                          </Badge>
+
                           <div className="text-xs text-gray-400">
                             Created:{" "}
-                            {new Date(lead.createdAt).toLocaleDateString()}
+                            {new Date(lead.createdAt!).toLocaleDateString()}
                           </div>
                           {lead.statusUpdatedAt && (
                             <div className="text-xs text-gray-400">
@@ -468,244 +419,7 @@ export default function LeadManagementPage() {
     </div>
   );
 
-  const LeadDetailView = ({ lead }: { lead: Lead }) => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-white/20 shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">
-            {lead.leadName || lead.clientName}
-          </h2>
-          <Button
-            onClick={() => setSelectedLead(null)}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            <XCircle className="h-6 w-6" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Lead Information */}
-          <div className="space-y-6">
-            <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Lead Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-white">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-blue-300" />
-                  <span className="text-sm">Client: {lead.clientName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-green-300" />
-                  <span className="text-sm">Phone: {lead.contactNumber}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-purple-300" />
-                  <span className="text-sm">Email: {lead.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-orange-300" />
-                  <span className="text-sm">Product: {lead.leadType}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-yellow-300" />
-                  <span className="text-sm">CIBIL: {lead.cibilScore}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-red-300" />
-                  <span className="text-sm">Address: {lead.address}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-indigo-300" />
-                  <span className="text-sm">
-                    Bank: {lead.selectedBank || "Not assigned"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-teal-300" />
-                  <span className="text-sm">
-                    Staff: {lead.assignedStaff || "Unassigned"}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Document Status */}
-            <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Document Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {lead.documents && lead.documents.length > 0 ? (
-                  <div className="space-y-3">
-                    {lead.documents.map((doc, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white/5"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-3 h-3 rounded-full ${
-                              doc.status === "verified"
-                                ? "bg-green-500"
-                                : doc.status === "provided"
-                                ? "bg-orange-500"
-                                : "bg-red-500"
-                            }`}
-                          ></div>
-                          <span className="text-white text-sm">{doc.type}</span>
-                        </div>
-                        <Badge
-                          className={`${
-                            doc.status === "verified"
-                              ? "bg-green-500/20 text-green-300 border-green-400/30"
-                              : doc.status === "provided"
-                              ? "bg-orange-500/20 text-orange-300 border-orange-400/30"
-                              : "bg-red-500/20 text-red-300 border-red-400/30"
-                          }`}
-                        >
-                          {doc.status}
-                        </Badge>
-                      </div>
-                    ))}
-                    <div className="mt-4 p-3 rounded-lg bg-white/5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">
-                          Overall Status:
-                        </span>
-                        <Badge
-                          className={`${
-                            getDocumentCompletionStatus(lead) ===
-                            "Document Complete"
-                              ? "bg-green-500/20 text-green-300 border-green-400/30"
-                              : "bg-orange-500/20 text-orange-300 border-orange-400/30"
-                          }`}
-                        >
-                          {getDocumentCompletionStatus(lead)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-400 text-center py-4">
-                    No documents uploaded
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Timeline */}
-          <div className="space-y-6">
-            <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Lead Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {getLeadTimeline(lead).map((item, index) => (
-                    <div key={index} className="flex items-start gap-4">
-                      <div
-                        className={`p-2 rounded-full ${
-                          item.status === "completed"
-                            ? "bg-green-500/20 text-green-300"
-                            : "bg-gray-500/20 text-gray-400"
-                        }`}
-                      >
-                        <item.icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-medium text-sm">
-                          {item.stage}
-                        </h4>
-                        <p className="text-gray-400 text-xs">
-                          {item.date
-                            ? new Date(item.date).toLocaleString()
-                            : "Pending"}
-                        </p>
-                      </div>
-                      <Badge
-                        className={`${
-                          item.status === "completed"
-                            ? "bg-green-500/20 text-green-300 border-green-400/30"
-                            : "bg-gray-500/20 text-gray-400 border-gray-400/30"
-                        }`}
-                      >
-                        {item.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={() => {
-                    setSelectedLead(lead); // Ensure selectedLead is set
-                    setEditFormData({
-                      clientName: lead.clientName,
-                      contactNumber: lead.contactNumber,
-                      email: lead.email,
-                      leadType: lead.leadType,
-                      annualIncome: lead.annualIncome,
-                      loanAmount: lead.loanAmount,
-                      address: lead.address,
-                      purpose: lead.purpose,
-                      notes: lead.notes,
-                    });
-                    setShowEditDialog(true);
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Lead Details
-                </Button>
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => setShowDocumentDialog(true)}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Manage Documents
-                </Button>
-                <Button
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  onClick={() => setShowReassignDialog(true)}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Reassign Staff
-                </Button>
-                <Button
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                  onClick={() => setShowBankDialog(true)}
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  Change Bank
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const LeadCard = ({ lead }: { lead: Lead }) => (
+  const LeadCard = ({ lead }: { lead: LeadForm }) => (
     <Card className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -714,12 +428,12 @@ export default function LeadManagementPage() {
               <h3 className="font-semibold text-white">{lead.clientName}</h3>
               <Badge
                 className={`${getStatusColor(
-                  lead.applicationStatus
+                  lead.applicationStatus!
                 )} text-white border-0`}
               >
                 {lead.applicationStatus}
               </Badge>
-              {lead.assignedStaff && lead.isVisibleToStaff ? (
+              {/* {lead.assignedStaff && lead.isVisibleToStaff ? (
                 <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
                   Assigned & Visible
                 </Badge>
@@ -731,12 +445,12 @@ export default function LeadManagementPage() {
                 <Badge className="bg-red-500/20 text-red-300 border-red-400/30">
                   Unassigned
                 </Badge>
-              )}
-              {lead.createdByStaff && (
+              )} */}
+              {/* {lead.createdByStaff && (
                 <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
                   Staff Created
                 </Badge>
-              )}
+              )} */}
             </div>
             <div className="space-y-1 text-sm text-gray-300">
               <div className="flex items-center gap-2">
@@ -751,22 +465,22 @@ export default function LeadManagementPage() {
                 <Briefcase className="h-4 w-4" />
                 <span>{lead.leadType}</span>
               </div>
-              {lead.selectedBank && (
+              {lead.bankSelection && (
                 <div className="flex items-center gap-2">
                   <Building className="h-4 w-4" />
-                  <span>{lead.selectedBank}</span>
+                  <span>{lead.bankSelection}</span>
                 </div>
               )}
               {lead.assignedStaff && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>Assigned to: {lead.assignedStaff}</span>
+                  <span>Assigned to: {lead.assignedStaffName}</span>
                 </div>
               )}
               {lead.ownerManagerAssignment && (
                 <div className="flex items-center gap-2 text-blue-300">
                   <UserPlus className="h-4 w-4" />
-                  <span>Assigned by: {lead.ownerManagerAssignment}</span>
+                  <span>Assigned by: {lead.ownerManagerAssignmentName}</span>
                 </div>
               )}
               {lead.assignedAt && (
@@ -784,17 +498,7 @@ export default function LeadManagementPage() {
               size="sm"
               onClick={() => {
                 setSelectedLead(lead);
-                setEditFormData({
-                  clientName: lead.clientName,
-                  contactNumber: lead.contactNumber,
-                  email: lead.email,
-                  leadType: lead.leadType,
-                  annualIncome: lead.annualIncome,
-                  loanAmount: lead.loanAmount,
-                  address: lead.address,
-                  purpose: lead.purpose,
-                  notes: lead.notes,
-                });
+                setEditFormData(lead);
                 setShowEditDialog(true);
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -802,23 +506,21 @@ export default function LeadManagementPage() {
               <Eye className="h-4 w-4 mr-1" />
               View/Edit
             </Button>
-            {lead.selectedBank &&
-              lead.assignedStaff &&
-              lead.isVisibleToStaff && (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setSelectedLead(lead);
-                    setShowFileTracker(true);
-                  }}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  <FileText className="h-4 w-4 mr-1" />
-                  File Status
-                </Button>
-              )}
+            {lead.bankSelection && lead.assignedStaff && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSelectedLead(lead);
+                  setShowFileTracker(true);
+                }}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                File Status
+              </Button>
+            )}
             {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
-              (!lead.assignedStaff || !lead.isVisibleToStaff) && (
+              !lead.assignedStaff && (
                 <Button
                   size="sm"
                   onClick={() => {
@@ -851,51 +553,6 @@ export default function LeadManagementPage() {
   if (!user || user.type !== "official" || !branch) {
     return <div>Loading...</div>;
   }
-
-  const handleEditLead = () => {
-    if (!selectedLead || !user) return;
-
-    const changes = [];
-    if (editFormData.clientName !== selectedLead.clientName)
-      changes.push("Client Name");
-    if (editFormData.contactNumber !== selectedLead.contactNumber)
-      changes.push("Contact Number");
-    if (editFormData.email !== selectedLead.email) changes.push("Email");
-    if (editFormData.leadType !== selectedLead.leadType)
-      changes.push("Lead Type");
-    if (editFormData.annualIncome !== selectedLead.annualIncome)
-      changes.push("Annual Income");
-    if (editFormData.loanAmount !== selectedLead.loanAmount)
-      changes.push("Loan Amount");
-    if (editFormData.address !== selectedLead.address) changes.push("Address");
-    if (editFormData.purpose !== selectedLead.purpose) changes.push("Purpose");
-    if (editFormData.notes !== selectedLead.notes) changes.push("Notes");
-
-    const updatedLead = {
-      ...selectedLead,
-      ...editFormData,
-      editHistory: [
-        ...(selectedLead.editHistory || []),
-        {
-          editedBy: user.name,
-          editedAt: new Date().toISOString(),
-          changes: changes.length > 0 ? changes : ["General Update"],
-        },
-      ],
-      statusUpdatedAt: new Date().toISOString(), // Update statusUpdatedAt on any edit
-    };
-
-    const success = updateLead(updatedLead.id, updatedLead);
-    if (success) {
-      setLeads(getLeads(branchId)); // Refresh leads
-      setShowEditDialog(false);
-      setSelectedLead(null);
-      setEditFormData({});
-    } else {
-      // Handle error if updateLead fails
-      console.error("Failed to update lead");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50">
@@ -1262,155 +919,11 @@ export default function LeadManagementPage() {
       {/* Modals */}
       {showPipelineView && <PipelineView />}
       {selectedLead && !showFileTracker && (
-        <LeadDetailView lead={selectedLead} />
-      )}
-      {selectedLead &&
-        showFileTracker &&
-        selectedLead.selectedBank &&
-        selectedLead.assignedStaff && (
-          <FileStatusTracker
-            lead={selectedLead}
-            onClose={() => {
-              setShowFileTracker(false);
-              setSelectedLead(null);
-            }}
-            onUpdate={(leadId, updates) => {
-              updateLead(leadId, updates);
-            }}
-          />
-        )}
-
-      {/* Reassign Staff Dialog */}
-      {showReassignDialog && selectedLead && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Reassign Staff</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Select Staff Member
-                </label>
-                <select
-                  value={selectedStaffForReassign}
-                  onChange={(e) => setSelectedStaffForReassign(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select staff member...</option>
-                  {getStaffMembers().map((staff) => (
-                    <option key={staff.id} value={staff.name}>
-                      {staff.name} - {staff.designation}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    if (selectedStaffForReassign && selectedLead) {
-                      const updatedLeads = leads.map((lead) =>
-                        lead.id === selectedLead.id
-                          ? { ...lead, assignedStaff: selectedStaffForReassign }
-                          : lead
-                      );
-                      setLeads(updatedLeads);
-                      setSelectedStaffForReassign("");
-                      setShowReassignDialog(false);
-                    }
-                  }}
-                  className="flex-1"
-                >
-                  Reassign
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowReassignDialog(false);
-                    setSelectedStaffForReassign("");
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Change Bank Dialog */}
-      {showBankDialog && selectedLead && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Change Bank</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Select Bank
-                </label>
-                <select
-                  value={selectedBankForChange}
-                  onChange={(e) => {
-                    if (e.target.value === "add-custom") {
-                      setShowCustomBankDialogInChange(true);
-                    } else {
-                      setSelectedBankForChange(e.target.value);
-                    }
-                  }}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select bank...</option>
-                  <option value="State Bank of India">
-                    State Bank of India
-                  </option>
-                  <option value="HDFC Bank">HDFC Bank</option>
-                  <option value="ICICI Bank">ICICI Bank</option>
-                  <option value="Axis Bank">Axis Bank</option>
-                  <option value="Kotak Mahindra Bank">
-                    Kotak Mahindra Bank
-                  </option>
-                  <option value="Punjab National Bank">
-                    Punjab National Bank
-                  </option>
-                  {customBanks.map((bank) => (
-                    <option key={bank} value={bank}>
-                      {bank} (Custom)
-                    </option>
-                  ))}
-                  <option value="add-custom">+ Add Custom Bank</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    if (selectedBankForChange && selectedLead) {
-                      const updatedLeads = leads.map((lead) =>
-                        lead.id === selectedLead.id
-                          ? { ...lead, selectedBank: selectedBankForChange }
-                          : lead
-                      );
-                      setLeads(updatedLeads);
-                      setSelectedBankForChange("");
-                      setShowBankDialog(false);
-                    }
-                  }}
-                  className="flex-1"
-                >
-                  Change Bank
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowBankDialog(false);
-                    setSelectedBankForChange("");
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LeadDetailView
+          lead={selectedLead}
+          setLeads={setLeads}
+          setSelectedLead={setSelectedLead}
+        />
       )}
 
       {showCustomBankDialogInChange && (
@@ -1459,262 +972,6 @@ export default function LeadManagementPage() {
         </div>
       )}
 
-      {/* Document Management Dialog */}
-      {showDocumentDialog && selectedLead && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Manage Documents</h3>
-            <div className="space-y-4">
-              {documentTypes.map((docType) => {
-                const existingDoc = selectedLead.documents?.find(
-                  (d) => d.type === docType
-                );
-                return (
-                  <div
-                    key={docType}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <span className="font-medium">{docType}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        className={
-                          existingDoc?.status === "verified"
-                            ? "bg-green-100 text-green-800"
-                            : existingDoc?.status === "provided"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-red-100 text-red-800"
-                        }
-                      >
-                        {existingDoc?.status || "pending"}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        {existingDoc ? "Update" : "Upload"}
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDocumentDialog(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Lead Dialog */}
-      {showEditDialog && selectedLead && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Edit Lead Details</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Client Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.clientName || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        clientName: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Contact Number
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.contactNumber || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        contactNumber: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={editFormData.email || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        email: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Lead Type
-                  </label>
-                  <select
-                    value={editFormData.leadType || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        leadType: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">Select lead type...</option>
-                    <option value="Home Loan">Home Loan</option>
-                    <option value="Personal Loan">Personal Loan</option>
-                    <option value="Business Loan">Business Loan</option>
-                    <option value="Car Loan">Car Loan</option>
-                    <option value="Education Loan">Education Loan</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Annual Income
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.annualIncome || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        annualIncome: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Loan Amount
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.loanAmount || ""}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        loanAmount: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Address
-                </label>
-                <textarea
-                  value={editFormData.address || ""}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      address: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border rounded-md"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Purpose
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.purpose || ""}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      purpose: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Notes</label>
-                <textarea
-                  value={editFormData.notes || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, notes: e.target.value })
-                  }
-                  className="w-full p-2 border rounded-md"
-                  rows={3}
-                />
-              </div>
-
-              {/* Edit History */}
-              {selectedLead.editHistory &&
-                selectedLead.editHistory.length > 0 && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium mb-2">Edit History</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {selectedLead.editHistory.map((edit, index) => (
-                        <div key={index} className="text-sm text-gray-600">
-                          <span className="font-medium">{edit.editedBy}</span>{" "}
-                          edited on{" "}
-                          {new Date(edit.editedAt).toLocaleDateString()} at{" "}
-                          {new Date(edit.editedAt).toLocaleTimeString()}
-                          {edit.changes && (
-                            <div className="text-xs text-gray-500 ml-2">
-                              Changes: {edit.changes.join(", ")}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button
-                onClick={handleEditLead}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Save Changes
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEditDialog(false);
-                  setEditFormData({});
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <main className="flex-1 p-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -1746,7 +1003,7 @@ export default function LeadManagementPage() {
               if (!acc[type]) acc[type] = [];
               acc[type].push(lead);
               return acc;
-            }, {} as Record<string, Lead[]>);
+            }, {} as Record<string, LeadForm[]>);
 
             return (
               <div className="space-y-8">
@@ -1807,17 +1064,7 @@ export default function LeadManagementPage() {
                                   className="p-3 bg-white border border-orange-200 hover:shadow-md transition-shadow cursor-pointer"
                                   onClick={() => {
                                     setSelectedLead(lead);
-                                    setEditFormData({
-                                      clientName: lead.clientName,
-                                      contactNumber: lead.contactNumber,
-                                      email: lead.email,
-                                      leadType: lead.leadType,
-                                      annualIncome: lead.annualIncome,
-                                      loanAmount: lead.loanAmount,
-                                      address: lead.address,
-                                      purpose: lead.purpose,
-                                      notes: lead.notes,
-                                    });
+                                    setEditFormData(lead);
                                     setShowEditDialog(true);
                                   }}
                                 >
@@ -1842,7 +1089,7 @@ export default function LeadManagementPage() {
                                     </div>
                                     <p className="text-xs text-gray-500">
                                       {new Date(
-                                        lead.createdAt
+                                        lead.createdAt!
                                       ).toLocaleDateString()}
                                     </p>
                                   </div>
@@ -1881,17 +1128,7 @@ export default function LeadManagementPage() {
                                   className="p-3 bg-white border border-blue-200 hover:shadow-md transition-shadow cursor-pointer"
                                   onClick={() => {
                                     setSelectedLead(lead);
-                                    setEditFormData({
-                                      clientName: lead.clientName,
-                                      contactNumber: lead.contactNumber,
-                                      email: lead.email,
-                                      leadType: lead.leadType,
-                                      annualIncome: lead.annualIncome,
-                                      loanAmount: lead.loanAmount,
-                                      address: lead.address,
-                                      purpose: lead.purpose,
-                                      notes: lead.notes,
-                                    });
+                                    setEditFormData(lead);
                                     setShowEditDialog(true);
                                   }}
                                 >
@@ -1912,7 +1149,7 @@ export default function LeadManagementPage() {
                                     </div>
                                     <p className="text-xs text-gray-500">
                                       Bank:{" "}
-                                      {lead.selectedBank || "Not assigned"}
+                                      {lead.bankSelection || "Not assigned"}
                                     </p>
                                   </div>
                                 </Card>
@@ -1933,7 +1170,7 @@ export default function LeadManagementPage() {
                                   (l) =>
                                     l.applicationStatus === "login" ||
                                     (l.applicationStatus === "pending" &&
-                                      l.selectedBank)
+                                      l.bankSelection)
                                 ).length
                               }
                             </Badge>
@@ -1944,7 +1181,7 @@ export default function LeadManagementPage() {
                                 (l) =>
                                   l.applicationStatus === "login" ||
                                   (l.applicationStatus === "pending" &&
-                                    l.selectedBank)
+                                    l.bankSelection)
                               )
                               .map((lead) => (
                                 <Card
@@ -1952,17 +1189,7 @@ export default function LeadManagementPage() {
                                   className="p-3 bg-white border border-yellow-200 hover:shadow-md transition-shadow cursor-pointer"
                                   onClick={() => {
                                     setSelectedLead(lead);
-                                    setEditFormData({
-                                      clientName: lead.clientName,
-                                      contactNumber: lead.contactNumber,
-                                      email: lead.email,
-                                      leadType: lead.leadType,
-                                      annualIncome: lead.annualIncome,
-                                      loanAmount: lead.loanAmount,
-                                      address: lead.address,
-                                      purpose: lead.purpose,
-                                      notes: lead.notes,
-                                    });
+                                    setEditFormData(lead);
                                     setShowEditDialog(true);
                                   }}
                                 >
@@ -1978,7 +1205,7 @@ export default function LeadManagementPage() {
                                         variant="outline"
                                         className="text-xs"
                                       >
-                                        {lead.selectedBank}
+                                        {lead.bankSelection}
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-gray-500">
@@ -2016,17 +1243,7 @@ export default function LeadManagementPage() {
                                   className="p-3 bg-white border border-green-200 hover:shadow-md transition-shadow cursor-pointer"
                                   onClick={() => {
                                     setSelectedLead(lead);
-                                    setEditFormData({
-                                      clientName: lead.clientName,
-                                      contactNumber: lead.contactNumber,
-                                      email: lead.email,
-                                      leadType: lead.leadType,
-                                      annualIncome: lead.annualIncome,
-                                      loanAmount: lead.loanAmount,
-                                      address: lead.address,
-                                      purpose: lead.purpose,
-                                      notes: lead.notes,
-                                    });
+                                    setEditFormData(lead);
                                     setShowEditDialog(true);
                                   }}
                                 >
@@ -2042,7 +1259,7 @@ export default function LeadManagementPage() {
                                         variant="outline"
                                         className="text-xs"
                                       >
-                                        {lead.selectedBank}
+                                        {lead.bankSelection}
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-green-600 font-medium">
@@ -2078,17 +1295,7 @@ export default function LeadManagementPage() {
                                   className="p-3 bg-white border border-red-200 hover:shadow-md transition-shadow cursor-pointer"
                                   onClick={() => {
                                     setSelectedLead(lead);
-                                    setEditFormData({
-                                      clientName: lead.clientName,
-                                      contactNumber: lead.contactNumber,
-                                      email: lead.email,
-                                      leadType: lead.leadType,
-                                      annualIncome: lead.annualIncome,
-                                      loanAmount: lead.loanAmount,
-                                      address: lead.address,
-                                      purpose: lead.purpose,
-                                      notes: lead.notes,
-                                    });
+                                    setEditFormData(lead);
                                     setShowEditDialog(true);
                                   }}
                                 >
@@ -2104,7 +1311,7 @@ export default function LeadManagementPage() {
                                         variant="outline"
                                         className="text-xs"
                                       >
-                                        {lead.selectedBank}
+                                        {lead.bankSelection}
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-red-600 font-medium">

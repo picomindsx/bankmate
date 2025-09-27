@@ -48,15 +48,32 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { getBranches } from "@/services/branch-service";
-import { updateDocumentStatus } from "@/services/document-service";
 import {
+  getDocumentCompletionStatus,
+  updateDocumentStatus,
+} from "@/services/document-service";
+import {
+  addLead,
+  addNewLead,
   assignLeadToStaff,
   getAssignedLeads,
+  getStaffAssignedLeads,
   updateLead,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { LeadApplication as Lead } from "@/types/common";
-import { emptyLeadApplication } from "@/lib/consts";
+import {
+  IGender,
+  IIncomeCategory,
+  IUrgencyLevel,
+  Lead,
+  LeadForm,
+} from "@/types/common";
+import {
+  emptyLeadForm,
+  GENDER_OPTIONS,
+  INCOME_CATEGORY,
+  LOAN_TYPES,
+} from "@/lib/consts";
 
 interface CustomOption {
   id: string;
@@ -67,14 +84,13 @@ interface CustomOption {
 const EmployeeDashboard = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [myLeads, setMyLeads] = useState<Lead[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [myLeads, setMyLeads] = useState<LeadForm[]>([]);
+  const [selectedLead, setSelectedLead] = useState<LeadForm | null>(null);
   const [showLeadDetail, setShowLeadDetail] = useState(false);
   const [showFileTracker, setShowFileTracker] = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
 
-  const [customOptions, setCustomOptions] = useState<CustomOption[]>([]);
   const [dateFilter, setDateFilter] = useState<
     "all" | "today" | "week" | "month"
   >("all");
@@ -92,7 +108,7 @@ const EmployeeDashboard = () => {
   // State for document management dialog
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
 
-  const [newLead, setNewLead] = useState<Partial<Lead>>(emptyLeadApplication);
+  const [newLead, setNewLead] = useState<Partial<LeadForm>>(emptyLeadForm);
 
   const [customGender, setCustomGender] = useState("");
   const [customLoanType, setCustomLoanType] = useState("");
@@ -102,47 +118,31 @@ const EmployeeDashboard = () => {
   const [showCustomIncomeCategory, setShowCustomIncomeCategory] =
     useState(false);
 
-  const genderOptions = [
-    "Male",
-    "Female",
-    "Other",
-    ...customOptions
-      .filter((opt) => opt.type === "gender")
-      .map((opt) => opt.value),
-  ];
   const loanTypeOptions = [
     "Home Loan",
     "Personal Loan",
     "Business Loan",
     "Car Loan",
     "Education Loan",
-    ...customOptions
-      .filter((opt) => opt.type === "loanType")
-      .map((opt) => opt.value),
   ];
   const incomeCategoryOptions = [
     "Salaried",
     "Self-Employed",
     "Business Owner",
     "NRI",
-    ...customOptions
-      .filter((opt) => opt.type === "incomeCategory")
-      .map((opt) => opt.value),
   ];
 
   const myCreatedLeads = myLeads.filter(
     (lead) => lead.createdBy === "Current Staff Member"
   );
-  const pendingDocumentsCount = myCreatedLeads.filter((lead) =>
-    Object.values(lead.documents || {}).some((status) => !status)
-  ).length;
+  // const pendingDocumentsCount = myCreatedLeads.filter((lead) =>
+  //   Object.values(lead.documents || {}).some((status) => !status)
+  // ).length;
   const completedLeadsCount = myCreatedLeads.filter(
-    (lead) => lead.status === "sanctioned"
+    (lead) => lead.applicationStatus === "sanctioned"
   ).length;
   const notificationsCount = myCreatedLeads.filter(
-    (lead) =>
-      lead.status === "new" ||
-      Object.values(lead.documents || {}).some((status) => !status)
+    (lead) => lead.applicationStatus === "login"
   ).length;
 
   const getFilteredLeads = () => {
@@ -151,16 +151,18 @@ const EmployeeDashboard = () => {
     if (dateFilter === "today") {
       const today = new Date().toDateString();
       filtered = filtered.filter(
-        (lead) => new Date(lead.createdAt).toDateString() === today
+        (lead) => new Date(lead.createdAt!).toDateString() === today
       );
     } else if (dateFilter === "week") {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      filtered = filtered.filter((lead) => new Date(lead.createdAt) >= weekAgo);
+      filtered = filtered.filter(
+        (lead) => new Date(lead.createdAt!) >= weekAgo
+      );
     } else if (dateFilter === "month") {
       if (monthFilter) {
         filtered = filtered.filter((lead) => {
-          const leadDate = new Date(lead.createdAt);
+          const leadDate = new Date(lead.createdAt!);
           return leadDate.getMonth() === Number.parseInt(monthFilter) - 1;
         });
       }
@@ -169,74 +171,30 @@ const EmployeeDashboard = () => {
     return filtered;
   };
 
-  const saveCustomGender = () => {
-    if (customGender.trim()) {
-      const newOption: CustomOption = {
-        id: Date.now().toString(),
-        value: customGender.trim(),
-        type: "gender",
-      };
-      setCustomOptions((prev) => [...prev, newOption]);
-      setNewLead({ ...newLead, gender: customGender.trim() });
-      setCustomGender("");
-      setShowCustomGender(false);
-    }
-  };
-
-  const saveCustomLoanType = () => {
-    if (customLoanType.trim()) {
-      const newOption: CustomOption = {
-        id: Date.now().toString(),
-        value: customLoanType.trim(),
-        type: "loanType",
-      };
-      setCustomOptions((prev) => [...prev, newOption]);
-      setNewLead({
-        ...newLead,
-        loanTypes: [...(newLead.loanTypes || []), customLoanType.trim()],
-      });
-      setCustomLoanType("");
-      setShowCustomLoanType(false);
-    }
-  };
-
-  const saveCustomIncomeCategory = () => {
-    if (customIncomeCategory.trim()) {
-      const newOption: CustomOption = {
-        id: Date.now().toString(),
-        value: customIncomeCategory.trim(),
-        type: "incomeCategory",
-      };
-      setCustomOptions((prev) => [...prev, newOption]);
-      setNewLead({ ...newLead, incomeCategory: customIncomeCategory.trim() });
-      setCustomIncomeCategory("");
-      setShowCustomIncomeCategory(false);
-    }
-  };
-
   const handleAddLead = () => {
     const leadId = Date.now().toString();
-    const lead: Lead = {
-      ...(newLead as Lead),
-      id: leadId,
+    const lead: LeadForm = {
+      ...(newLead as LeadForm),
       createdAt: new Date().toISOString(),
-      documents: {
-        "PAN Card": false,
-        "Aadhar Card": false,
-        "Income Proof": false,
-        "Bank Statements": false,
-      },
+      // documents: {
+      //   "PAN Card": false,
+      //   "Aadhar Card": false,
+      //   "Income Proof": false,
+      //   "Bank Statements": false,
+      // },
     };
+
+    addNewLead(lead);
 
     setMyLeads((prev) => [...prev, lead]);
     setNewLead({
-      ...emptyLeadApplication,
-      createdBy: "Current Staff Member",
+      ...emptyLeadForm,
+      createdBy: user?.id,
     });
     setShowAddLead(false);
   };
 
-  const viewLeadDetails = (lead: Lead) => {
+  const viewLeadDetails = (lead: LeadForm) => {
     setSelectedLead(lead);
     setShowLeadDetails(true);
   };
@@ -300,24 +258,6 @@ const EmployeeDashboard = () => {
     "Bank of Baroda",
     "Axis Bank",
     "Kotak Mahindra Bank",
-    ...customOptions
-      .filter((opt) => opt.type === "bank")
-      .map((opt) => opt.value),
-  ];
-
-  const allLoanTypes = [
-    "Home Loan",
-    "Personal Loan",
-    "Business Loan",
-    "Car Loan",
-    "Two-Wheeler Loan",
-    "Gold Loan",
-    "Loan Against Property (LAP)",
-    "NRI Loan",
-    "Education Loan",
-    ...customOptions
-      .filter((opt) => opt.type === "loanType")
-      .map((opt) => opt.value),
   ];
 
   const allIncomeCategories = [
@@ -328,9 +268,6 @@ const EmployeeDashboard = () => {
     "retired",
     "student",
     "other",
-    ...customOptions
-      .filter((opt) => opt.type === "incomeCategory")
-      .map((opt) => opt.value),
   ];
 
   const handleDocumentCheck = (docId: string, checked: boolean) => {
@@ -369,50 +306,11 @@ const EmployeeDashboard = () => {
     string[]
   >([]);
 
-  const handleAddCustomOption = () => {
-    if (!newCustomOption.trim() || !customOptionType) return;
-
-    switch (customOptionType) {
-      case "bank":
-        if (!allBanks.includes(newCustomOption.trim())) {
-          setCustomBanks((prev) => [...prev, newCustomOption.trim()]);
-        }
-        break;
-      case "loanType":
-        if (!allLoanTypes.includes(newCustomOption.trim())) {
-          setCustomLoanTypes((prev) => [...prev, newCustomOption.trim()]);
-          // Auto-select the new loan type
-          setNewLead((prev) => ({
-            ...prev,
-            loanTypes: [...prev.loanTypes, newCustomOption.trim()],
-          }));
-        }
-        break;
-      case "incomeCategory":
-        if (!allIncomeCategories.includes(newCustomOption.trim())) {
-          setCustomIncomeCategories((prev) => [
-            ...prev,
-            newCustomOption.trim(),
-          ]);
-          // Auto-select the new income category
-          setNewLead((prev) => ({
-            ...prev,
-            incomeCategory: newCustomOption.trim(),
-          }));
-        }
-        break;
-    }
-
-    setNewCustomOption("");
-    setShowCustomOptionDialog(false);
-    setCustomOptionType(null);
-  };
-
-  const openCustomOptionDialog = (
-    type: "bank" | "loanType" | "incomeCategory"
-  ) => {
-    setCustomOptionType(type);
-    setShowCustomOptionDialog(true);
+  const refetchLeads = () => {
+    if (!user) return false;
+    getStaffAssignedLeads(user.id).then((leads) => {
+      setMyLeads(leads);
+    });
   };
 
   const handleAssignLead = (
@@ -424,37 +322,38 @@ const EmployeeDashboard = () => {
 
     const success = assignLeadToStaff(leadId, staffId, user, selectedBank);
     if (success) {
-      setMyLeads(getAssignedLeads(user.id));
+      refetchLeads();
+
       return true;
     }
     return false;
   };
 
-  const handleReassignLead = async (leadId: string, newStaffId: string) => {
-    const lead = myLeads.find((l) => l.id === leadId);
-    if (lead && user) {
-      const staffList = await getStaff();
-      const updatedLead = {
-        ...lead,
-        assignedStaff: staffList.find((s) => s.id === newStaffId)?.name || "",
-        ownerManagerAssignment: `${user.name} (${user.role})`,
-        updatedAt: new Date().toISOString(),
-        editHistory: [
-          ...(lead.editHistory || []),
-          {
-            editedBy: user.name,
-            editedAt: new Date().toISOString(),
-            changes: ["Staff Reassignment"],
-          },
-        ],
-      };
+  // const handleReassignLead = async (leadId: string, newStaffId: string) => {
+  //   const lead = myLeads.find((l) => l.id === leadId);
+  //   if (lead && user) {
+  //     const staffList = await getStaff();
+  //     const updatedLead: Partial<Lead> = {
+  //       ...lead,
+  //       assignedStaff: staffList.find((s) => s.id === newStaffId)?.name || "",
+  //       ownerManagerAssignment: `${user.name} (${user.role})`,
+  //       updatedAt: new Date().toISOString(),
+  //       editHistory: [
+  //         ...(lead.editHistory || []),
+  //         {
+  //           editedBy: user.name!,
+  //           editedAt: new Date().toISOString(),
+  //           changes: ["Staff Reassignment"],
+  //         },
+  //       ],
+  //     };
 
-      const success = updateLead(leadId, updatedLead, user.name);
-      if (success) {
-        setMyLeads(getAssignedLeads(user.id));
-      }
-    }
-  };
+  //     const success = updateLead(leadId, updatedLead, user.name);
+  //     if (success) {
+  //       setMyLeads(getAssignedLeads(user.id));
+  //     }
+  //   }
+  // };
 
   const handleDocumentManagement = (
     leadId: string,
@@ -467,52 +366,30 @@ const EmployeeDashboard = () => {
       status,
       user?.name
     );
-    if (success) {
-      setMyLeads(getAssignedLeads(user.id));
-    }
-  };
-
-  const handleEditLead = (leadId: string, updates: Partial<Lead>) => {
-    if (!user) return;
-
-    const success = updateLead(leadId, updates, user.name);
-    if (success) {
-      setMyLeads(getAssignedLeads(user.id));
+    if (success && user) {
+      refetchLeads();
     }
   };
 
   useEffect(() => {
-    if (!user) {
-      console.log("[v0] No user found, redirecting to login");
-      router.push("/");
-      return;
+    if (user) {
+      refetchLeads();
+      getBranches().then((branchList) => setBranches(branchList));
     }
-
-    if (user.type !== "employee") {
-      console.log("[v0] User is not employee, redirecting to main dashboard");
-      router.push("/dashboard");
-      return;
-    }
-
-    const assignedLeads = getAssignedLeads(user.id);
-    setMyLeads(assignedLeads);
-    getBranches().then((branchList) => setBranches(branchList));
-    console.log(
-      "[v0] Employee dashboard loaded for:",
-      user.name,
-      "with",
-      assignedLeads.length,
-      "assigned leads"
-    );
   }, [user]);
 
   const handleLoanTypeChange = (loanType: string, checked: boolean) => {
     if (checked) {
-      setNewLead({ ...newLead, loanTypes: [...newLead.loanTypes, loanType] });
+      setNewLead({
+        ...newLead,
+        loanTypes: [...(newLead.loanTypes || []), loanType],
+      });
     } else {
       setNewLead({
         ...newLead,
-        loanTypes: newLead.loanTypes.filter((type) => type !== loanType),
+        loanTypes: (newLead.loanTypes || []).filter(
+          (type) => type !== loanType
+        ),
       });
     }
   };
@@ -558,25 +435,25 @@ const EmployeeDashboard = () => {
     }
   };
 
-  const getDocumentCompletionStatus = (lead: Lead) => {
-    if (!lead || !lead.documents) return "No Documents";
-    const documents = Array.isArray(lead.documents) ? lead.documents : [];
-    if (documents.length === 0) return "No Documents";
+  // const getDocumentCompletionStatus = (lead: Lead) => {
+  //   if (!lead || !lead.documents) return "No Documents";
+  //   const documents = Array.isArray(lead.documents) ? lead.documents : [];
+  //   if (documents.length === 0) return "No Documents";
 
-    const totalDocs = documents.length;
-    const verifiedDocs = documents.filter(
-      (doc) => doc && doc.status === "verified"
-    ).length;
-    const providedDocs = documents.filter(
-      (doc) => doc && doc.status === "provided"
-    ).length;
+  //   const totalDocs = documents.length;
+  //   const verifiedDocs = documents.filter(
+  //     (doc) => doc && doc.status === "verified"
+  //   ).length;
+  //   const providedDocs = documents.filter(
+  //     (doc) => doc && doc.status === "provided"
+  //   ).length;
 
-    if (verifiedDocs === totalDocs) return "Complete";
-    if (providedDocs + verifiedDocs === totalDocs) return "Under Review";
-    return "Pending";
-  };
+  //   if (verifiedDocs === totalDocs) return "Complete";
+  //   if (providedDocs + verifiedDocs === totalDocs) return "Under Review";
+  //   return "Pending";
+  // };
 
-  const LeadDetailModal = ({ lead }: { lead: Lead }) => (
+  const LeadDetailModal = ({ lead }: { lead: LeadForm }) => (
     <Dialog open={showLeadDetail} onOpenChange={setShowLeadDetail}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -628,14 +505,16 @@ const EmployeeDashboard = () => {
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-red-500" />
                   <span className="font-medium">Address:</span>
-                  <span className="text-sm">{lead.address}</span>
+                  <span className="text-sm">
+                    {lead.currentAddress || lead.permanentAddress}
+                  </span>
                 </div>
-                {lead.selectedBank && (
+                {lead.bankSelection && (
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-indigo-500" />
                     <span className="font-medium">Assigned Bank:</span>
                     <Badge className="bg-blue-500/20 text-blue-700 border-blue-300">
-                      {lead.selectedBank}
+                      {lead.bankSelection}
                     </Badge>
                   </div>
                 )}
@@ -661,14 +540,14 @@ const EmployeeDashboard = () => {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <span className="font-medium">Created:</span>
-                  <span>{new Date(lead.createdAt).toLocaleString()}</span>
+                  <span>{new Date(lead.createdAt!).toLocaleString()}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-purple-500" />
                   <span className="font-medium">Status:</span>
                   <Badge
                     className={`${getStatusColor(
-                      lead.applicationStatus
+                      lead.applicationStatus || ""
                     )} text-white border-0`}
                   >
                     {lead.applicationStatus}
@@ -687,129 +566,6 @@ const EmployeeDashboard = () => {
                   Document Management Pipeline
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid gap-3">
-                    {documentChecklist.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            id={doc.id}
-                            checked={doc.checked}
-                            onChange={(e) =>
-                              handleDocumentCheck(doc.id, e.target.checked)
-                            }
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <label htmlFor={doc.id} className="font-medium">
-                            {doc.name}
-                            {doc.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {doc.checked && (
-                            <Badge className="bg-green-500/20 text-green-700 border-green-300">
-                              Marked Complete
-                            </Badge>
-                          )}
-                          {doc.custom && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeCustomDocument(doc.id)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Add Custom Document Section */}
-                  <div className="border-t pt-4">
-                    {showAddCustomDoc ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Enter custom document name"
-                          value={customDocumentName}
-                          onChange={(e) =>
-                            setCustomDocumentName(e.target.value)
-                          }
-                          className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          onKeyPress={(e) =>
-                            e.key === "Enter" && addCustomDocument()
-                          }
-                        />
-                        <Button onClick={addCustomDocument} size="sm">
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setShowAddCustomDoc(false);
-                            setCustomDocumentName("");
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowAddCustomDoc(true)}
-                        className="w-full"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Custom Document
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Document Summary */}
-                  <div className="border-t pt-4">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div className="text-2xl font-bold text-green-600">
-                          {
-                            documentChecklist.filter((doc) => doc.checked)
-                              .length
-                          }
-                        </div>
-                        <div className="text-sm text-gray-600">Completed</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-red-600">
-                          {
-                            documentChecklist.filter(
-                              (doc) => doc.required && !doc.checked
-                            ).length
-                          }
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Required Missing
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-blue-600">
-                          {documentChecklist.length}
-                        </div>
-                        <div className="text-sm text-gray-600">Total</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           </div>
         </div>
@@ -895,7 +651,7 @@ const EmployeeDashboard = () => {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Pending Documents
@@ -908,7 +664,7 @@ const EmployeeDashboard = () => {
                 Documents to upload
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -945,7 +701,7 @@ const EmployeeDashboard = () => {
             <TabsTrigger value="assigned">
               My Asides (Assigned Leads)
             </TabsTrigger>
-            <TabsTrigger value="documents">Document Pipeline</TabsTrigger>
+            {/* <TabsTrigger value="documents">Document Pipeline</TabsTrigger> */}
             <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
 
@@ -974,7 +730,7 @@ const EmployeeDashboard = () => {
                                 </h4>
                                 <Badge
                                   className={`${getStatusColor(
-                                    lead.applicationStatus
+                                    lead.applicationStatus || ""
                                   )} text-white border-0`}
                                 >
                                   {lead.applicationStatus}
@@ -993,16 +749,16 @@ const EmployeeDashboard = () => {
                                   <Mail className="h-4 w-4" />
                                   {lead.email}
                                 </div>
-                                {lead.selectedBank && (
+                                {lead.bankSelection && (
                                   <div className="flex items-center gap-2">
                                     <Building className="h-4 w-4" />
-                                    {lead.selectedBank}
+                                    {lead.bankSelection}
                                   </div>
                                 )}
                                 <div className="flex items-center gap-2">
                                   <Clock className="h-4 w-4" />
                                   {new Date(
-                                    lead.createdAt
+                                    lead.createdAt || ""
                                   ).toLocaleDateString()}
                                 </div>
                               </div>
@@ -1021,7 +777,7 @@ const EmployeeDashboard = () => {
                               )}
 
                               {/* Document Status */}
-                              <div className="flex items-center gap-2">
+                              {/* <div className="flex items-center gap-2">
                                 <FileText className="h-4 w-4 text-purple-500" />
                                 <span className="text-sm">
                                   <span className="font-medium">
@@ -1045,7 +801,7 @@ const EmployeeDashboard = () => {
                                       /{lead.documents.length} verified
                                     </Badge>
                                   )}
-                              </div>
+                              </div> */}
                             </div>
 
                             <div className="flex flex-col gap-2">
@@ -1133,7 +889,7 @@ const EmployeeDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="documents" className="space-y-4">
+          {/* <TabsContent value="documents" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1227,7 +983,7 @@ const EmployeeDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="completed" className="space-y-4">
             <Card>
@@ -1381,45 +1137,21 @@ const EmployeeDashboard = () => {
                     <Select
                       value={newLead.gender}
                       onValueChange={(value) => {
-                        if (value === "custom") {
-                          setShowCustomGender(true);
-                        } else {
-                          setNewLead({ ...newLead, gender: value });
-                        }
+                        setNewLead({ ...newLead, gender: value as IGender });
                       }}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        {genderOptions.map((option) => (
+                        {GENDER_OPTIONS.map((option) => (
                           <SelectItem key={option} value={option}>
                             {option}
                           </SelectItem>
                         ))}
-                        <SelectItem value="custom">+ Add Custom</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  {showCustomGender && (
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Enter custom gender"
-                        value={customGender}
-                        onChange={(e) => setCustomGender(e.target.value)}
-                      />
-                      <Button size="sm" onClick={saveCustomGender}>
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowCustomGender(false)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label
@@ -1466,12 +1198,12 @@ const EmployeeDashboard = () => {
                 2️⃣ Loan Type (Select one or more) *
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {allLoanTypes.map((loanType) => (
+                {LOAN_TYPES.map((loanType) => (
                   <div key={loanType} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={loanType}
-                      checked={newLead.loanTypes.includes(loanType)}
+                      checked={(newLead.loanTypes || []).includes(loanType)}
                       onChange={(e) =>
                         handleLoanTypeChange(loanType, e.target.checked)
                       }
@@ -1483,17 +1215,6 @@ const EmployeeDashboard = () => {
                   </div>
                 ))}
               </div>
-              {newLead.loanTypes.includes("Others") && (
-                <div className="mt-3">
-                  <Input
-                    value={newLead.otherLoanType}
-                    onChange={(e) =>
-                      setNewLead({ ...newLead, otherLoanType: e.target.value })
-                    }
-                    placeholder="Specify other loan type"
-                  />
-                </div>
-              )}
             </div>
 
             <div className="border rounded-lg p-4">
@@ -1501,13 +1222,7 @@ const EmployeeDashboard = () => {
                 3️⃣ Income Category *
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  "Salaried",
-                  "Self-Employed",
-                  "Business Owner",
-                  "NRI",
-                  "Retired",
-                ].map((category) => (
+                {INCOME_CATEGORY.map((category) => (
                   <div key={category} className="flex items-center space-x-2">
                     <input
                       type="radio"
@@ -1515,7 +1230,10 @@ const EmployeeDashboard = () => {
                       name="incomeCategory"
                       checked={newLead.incomeCategory === category}
                       onChange={() =>
-                        setNewLead({ ...newLead, incomeCategory: category })
+                        setNewLead({
+                          ...newLead,
+                          incomeCategory: category as IIncomeCategory,
+                        })
                       }
                       className="border-gray-300"
                     />
@@ -1774,12 +1492,12 @@ const EmployeeDashboard = () => {
                     placeholder="Enter loan tenure in months"
                   />
                 </div>
-                <div className="space-y-2">
+                {/* TODO: <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-700">
                     Preferred Bank/NBFC
                   </Label>
                   <Select
-                    value={newLead.preferredBank}
+                    value={newLead.}
                     onValueChange={(value) =>
                       setNewLead({ ...newLead, preferredBank: value })
                     }
@@ -1795,7 +1513,7 @@ const EmployeeDashboard = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-700">
                     Urgency Level
@@ -1823,9 +1541,9 @@ const EmployeeDashboard = () => {
                     Purpose of Loan
                   </Label>
                   <Textarea
-                    value={newLead.purpose}
+                    value={newLead.purposeOfLoan}
                     onChange={(e) =>
-                      setNewLead({ ...newLead, purpose: e.target.value })
+                      setNewLead({ ...newLead, purposeOfLoan: e.target.value })
                     }
                     placeholder="Enter purpose of loan"
                     rows={2}
@@ -1834,8 +1552,10 @@ const EmployeeDashboard = () => {
               </div>
             </div>
 
-            {(newLead.loanTypes.includes("Home Loan") ||
-              newLead.loanTypes.includes("Loan Against Property (LAP)")) && (
+            {((newLead.loanTypes || []).includes("Home Loan") ||
+              (newLead.loanTypes || []).includes(
+                "Loan Against Property (LAP)"
+              )) && (
               <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900">
                   6️⃣ Property Details
@@ -1869,7 +1589,7 @@ const EmployeeDashboard = () => {
                       onChange={(e) =>
                         setNewLead({
                           ...newLead,
-                          propertyValue: e.target.value,
+                          propertyValue: parseInt(e.target.value, 10) || 0,
                         })
                       }
                       placeholder="Enter property value"
@@ -1920,7 +1640,7 @@ const EmployeeDashboard = () => {
               disabled={
                 !newLead.clientName ||
                 !newLead.contactNumber ||
-                newLead.loanTypes.length === 0
+                (newLead.loanTypes || []).length === 0
               }
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -1930,7 +1650,7 @@ const EmployeeDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      {/* <Dialog
         open={showCustomOptionDialog}
         onOpenChange={setShowCustomOptionDialog}
       >
@@ -1994,7 +1714,7 @@ const EmployeeDashboard = () => {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
         <DialogContent className="bg-white max-w-2xl">
@@ -2056,7 +1776,7 @@ const EmployeeDashboard = () => {
                 onClick={() => {
                   if (selectedLead && selectedStaffId) {
                     const success = handleAssignLead(
-                      selectedLead.id,
+                      selectedLead.id!,
                       selectedStaffId,
                       selectedBank
                     );
@@ -2089,92 +1809,10 @@ const EmployeeDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
-        <DialogContent className="bg-white max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Document Management</DialogTitle>
-            <DialogDescription>
-              Manage documents for {selectedLead?.clientName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedLead?.documents?.map((doc, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      doc.status === "verified"
-                        ? "bg-green-500"
-                        : doc.status === "provided"
-                        ? "bg-orange-500"
-                        : "bg-red-500"
-                    }`}
-                  ></div>
-                  <span className="font-medium">
-                    {doc.type || `Document ${index + 1}`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    className={
-                      doc.status === "verified"
-                        ? "bg-green-100 text-green-800"
-                        : doc.status === "provided"
-                        ? "bg-orange-100 text-orange-800"
-                        : "bg-red-100 text-red-800"
-                    }
-                  >
-                    {doc.status}
-                  </Badge>
-                  <Select
-                    value={doc.status}
-                    onValueChange={(value) =>
-                      handleDocumentManagement(
-                        selectedLead.id,
-                        doc.requirementId,
-                        value as any
-                      )
-                    }
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="provided">Provided</SelectItem>
-                      <SelectItem value="verified">Verified</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" variant="outline">
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )) || (
-              <div className="text-center py-8 text-gray-500">
-                No documents found for this lead
-              </div>
-            )}
-
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowDocumentDialog(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Lead Detail Modal */}
       {selectedLead && <LeadDetailModal lead={selectedLead} />}
 
-      {selectedLead && showFileTracker && (
+      {/* {selectedLead && showFileTracker && (
         <FileStatusTracker
           lead={selectedLead}
           onClose={() => setShowFileTracker(false)}
@@ -2182,10 +1820,10 @@ const EmployeeDashboard = () => {
             // Update the lead in the system
             updateLead(leadId, updates);
             // Refresh the leads list
-            setMyLeads(getAssignedLeads(user.id));
+            refetchLeads();
           }}
         />
-      )}
+      )} */}
     </div>
   );
 };

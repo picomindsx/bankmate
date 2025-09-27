@@ -66,9 +66,12 @@ import {
   getLeads,
   updateLead,
   assignLeadToStaff,
+  getAllLeads,
+  getBranchLeads,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Lead, Branch } from "@/types/common";
+import { Lead, Branch, LeadForm } from "@/types/common";
+import LeadDetailView from "@/components/lead-detail-view";
 
 // Sortable Lead Card Component
 function SortableLeadCard({
@@ -78,10 +81,10 @@ function SortableLeadCard({
   onFileTracker,
   user,
 }: {
-  lead: Lead;
-  onView: (lead: Lead) => void;
-  onAssign: (lead: Lead) => void;
-  onFileTracker: (lead: Lead) => void;
+  lead: LeadForm;
+  onView: (lead: LeadForm) => void;
+  onAssign: (lead: LeadForm) => void;
+  onFileTracker: (lead: LeadForm) => void;
   user: any;
 }) {
   const {
@@ -91,7 +94,7 @@ function SortableLeadCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: lead.id });
+  } = useSortable({ id: lead.id! });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -117,12 +120,7 @@ function SortableLeadCard({
     return `${pendingDocs} Pending`;
   };
 
-  const getSourceBadge = (lead: Lead) => {
-    if (lead.createdByStaff)
-      return {
-        label: "Staff Created",
-        color: "bg-blue-500/20 text-blue-300 border-blue-400/30",
-      };
+  const getSourceBadge = (lead: LeadForm) => {
     if (lead.leadSource === "website")
       return {
         label: "Website",
@@ -144,7 +142,7 @@ function SortableLeadCard({
         color: "bg-yellow-500/20 text-yellow-300 border-yellow-400/30",
       };
     return {
-      label: "Owner Created",
+      label: "Owner/Staff Created",
       color: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
     };
   };
@@ -187,30 +185,20 @@ function SortableLeadCard({
                 <span>{lead.assignedStaff}</span>
               </div>
             )}
-            {lead.selectedBank && (
+            {lead.bankSelection && (
               <div className="flex items-center gap-2">
                 <Building2 className="h-3 w-3" />
-                <span>{lead.selectedBank}</span>
+                <span>{lead.bankSelection}</span>
               </div>
             )}
           </div>
 
           <div className="flex flex-wrap gap-1">
-            <Badge
-              variant="outline"
-              className={`text-xs ${
-                getDocumentCompletionStatus(lead) === "Document Complete"
-                  ? "bg-green-500/20 text-green-300 border-green-400/30"
-                  : "bg-orange-500/20 text-orange-300 border-orange-400/30"
-              }`}
-            >
-              {getDocumentCompletionStatus(lead)}
-            </Badge>
-            {lead.assignedStaff && lead.isVisibleToStaff ? (
+            {lead.assignedStaff ? (
               <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
                 Visible
               </Badge>
-            ) : lead.assignedStaff && !lead.isVisibleToStaff ? (
+            ) : lead.assignedStaff ? (
               <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30 text-xs">
                 Pending
               </Badge>
@@ -222,7 +210,7 @@ function SortableLeadCard({
           </div>
 
           <div className="text-xs text-gray-400">
-            Created: {new Date(lead.createdAt).toLocaleDateString()}
+            Created: {new Date(lead.createdAt!).toLocaleDateString()}
           </div>
 
           <div className="flex gap-1 pt-2">
@@ -237,23 +225,21 @@ function SortableLeadCard({
               <Eye className="h-3 w-3 mr-1" />
               View
             </Button>
-            {lead.selectedBank &&
-              lead.assignedStaff &&
-              lead.isVisibleToStaff && (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFileTracker(lead);
-                  }}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs px-2 py-1 h-6"
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  File
-                </Button>
-              )}
+            {/* {lead.bankSelection && lead.assignedStaff && (
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFileTracker(lead);
+                }}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs px-2 py-1 h-6"
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                File
+              </Button>
+            )} */}
             {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
-              (!lead.assignedStaff || !lead.isVisibleToStaff) && (
+              !lead.assignedStaff && (
                 <Button
                   size="sm"
                   onClick={(e) => {
@@ -287,12 +273,12 @@ function DroppableColumn({
 }: {
   id: string;
   title: string;
-  leads: Lead[];
+  leads: LeadForm[];
   color: string;
   icon: any;
-  onView: (lead: Lead) => void;
-  onAssign: (lead: Lead) => void;
-  onFileTracker: (lead: Lead) => void;
+  onView: (lead: LeadForm) => void;
+  onAssign: (lead: LeadForm) => void;
+  onFileTracker: (lead: LeadForm) => void;
   user: any;
 }) {
   return (
@@ -311,7 +297,7 @@ function DroppableColumn({
 
       <div className="flex-1 p-4 bg-slate-800/50 rounded-b-lg min-h-[600px] overflow-y-auto">
         <SortableContext
-          items={leads.map((lead) => lead.id)}
+          items={leads.map((lead) => lead.id!)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">
@@ -342,16 +328,16 @@ export default function LeadPipelinePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<LeadForm[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<LeadForm | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showFileTracker, setShowFileTracker] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState("");
-  const [selectedBank, setSelectedBank] = useState("");
+  const [bankSelection, setSelectedBank] = useState("");
   const [customBanks, setCustomBanks] = useState<string[]>([]);
   const [showCustomBankDialog, setShowCustomBankDialog] = useState(false);
   const [newCustomBank, setNewCustomBank] = useState("");
@@ -364,6 +350,10 @@ export default function LeadPipelinePage() {
   });
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  // State for edit form
+  const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
 
   const banks = [
     "State Bank of India (SBI)",
@@ -387,13 +377,8 @@ export default function LeadPipelinePage() {
   );
 
   useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-
     getBranches().then((branchList) => setBranches(branchList));
-    setLeads(getLeads());
+    getAllLeads().then((leadList) => setLeads(leadList));
 
     getStaff().then((staffList) =>
       setStaff(staffList.filter((s) => s.isActive))
@@ -402,9 +387,9 @@ export default function LeadPipelinePage() {
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch =
-      lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.contactNumber.includes(searchTerm) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.clientName!.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.contactNumber!.includes(searchTerm) ||
+      lead.email!.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (lead.leadName &&
         lead.leadName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesBranch =
@@ -418,10 +403,8 @@ export default function LeadPipelinePage() {
       (!lead.assignedStaff || lead.assignedStaff === "")
   );
   const assignedLeads = filteredLeads.filter(
-    (lead) =>
-      lead.assignedStaff &&
-      lead.assignedStaff !== "" &&
-      lead.applicationStatus === "pending"
+    (lead) => lead.assignedStaff && lead.assignedStaff !== ""
+    // lead.applicationStatus === "pending"
   );
   const sanctionedLeads = filteredLeads.filter(
     (lead) => lead.applicationStatus === "sanctioned"
@@ -431,7 +414,8 @@ export default function LeadPipelinePage() {
   );
   const unassignedLeads = filteredLeads.filter(
     (lead) =>
-      !lead.assignedStaff || lead.assignedStaff === "" || !lead.isVisibleToStaff
+      (!lead.assignedStaff || lead.assignedStaff === "") &&
+      lead.applicationStatus !== "login"
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -484,7 +468,7 @@ export default function LeadPipelinePage() {
 
     if (Object.keys(updates).length > 0) {
       updateLead(leadId, updates);
-      setLeads(getLeads());
+      getAllLeads().then((leadList) => setLeads(leadList));
     }
   };
 
@@ -492,13 +476,13 @@ export default function LeadPipelinePage() {
     if (!selectedLead || !selectedStaffId || !user) return;
 
     const success = assignLeadToStaff(
-      selectedLead.id,
+      selectedLead.id!,
       selectedStaffId,
       user,
-      selectedBank
+      bankSelection
     );
     if (success) {
-      setLeads(getLeads());
+      getAllLeads().then((leadList) => setLeads(leadList));
       setShowAssignDialog(false);
       setSelectedLead(null);
       setSelectedStaffId("");
@@ -558,8 +542,8 @@ export default function LeadPipelinePage() {
           lead.leadType,
           lead.assignedStaff || "",
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
       ...assignedLeads.map((lead) =>
@@ -572,8 +556,8 @@ export default function LeadPipelinePage() {
           lead.leadType,
           lead.assignedStaff || "",
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
       ...sanctionedLeads.map((lead) =>
@@ -586,8 +570,8 @@ export default function LeadPipelinePage() {
           lead.leadType,
           lead.assignedStaff || "",
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
       ...rejectedLeads.map((lead) =>
@@ -600,8 +584,8 @@ export default function LeadPipelinePage() {
           lead.leadType,
           lead.assignedStaff || "",
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
       ...unassignedLeads.map((lead) =>
@@ -614,8 +598,8 @@ export default function LeadPipelinePage() {
           lead.leadType,
           lead.assignedStaff || "",
           lead.applicationStatus,
-          lead.selectedBank || "",
-          new Date(lead.createdAt).toLocaleDateString(),
+          lead.bankSelection || "",
+          new Date(lead.createdAt!).toLocaleDateString(),
         ].join(",")
       ),
     ].join("\n");
@@ -627,90 +611,6 @@ export default function LeadPipelinePage() {
     a.download = `lead-pipeline-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
   };
-
-  const LeadDetailView = ({ lead }: { lead: Lead }) => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-white/20 shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">
-            {lead.leadName || lead.clientName}
-          </h2>
-          <Button
-            onClick={() => setSelectedLead(null)}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            <XCircle className="h-6 w-6" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Lead Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-white">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-blue-300" />
-                <span className="text-sm">Client: {lead.clientName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-green-300" />
-                <span className="text-sm">Phone: {lead.contactNumber}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-purple-300" />
-                <span className="text-sm">Email: {lead.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-orange-300" />
-                <span className="text-sm">Product: {lead.leadType}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-indigo-300" />
-                <span className="text-sm">
-                  Bank: {lead.selectedBank || "Not assigned"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-teal-300" />
-                <span className="text-sm">
-                  Staff: {lead.assignedStaff || "Unassigned"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-white/10 border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Lead Details
-              </Button>
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                <FileText className="mr-2 h-4 w-4" />
-                Manage Documents
-              </Button>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                <Users className="mr-2 h-4 w-4" />
-                Reassign Staff
-              </Button>
-              <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
-                <Building2 className="mr-2 h-4 w-4" />
-                Change Bank
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
 
   if (!user || user.type !== "official") {
     return <div>Loading...</div>;
@@ -1071,7 +971,7 @@ export default function LeadPipelinePage() {
                 </Button>
               </div>
               <Select
-                value={selectedBank}
+                value={bankSelection}
                 onValueChange={(value) => {
                   if (value === "Add Custom Bank...") {
                     setShowCustomBankDialog(true);
@@ -1101,7 +1001,7 @@ export default function LeadPipelinePage() {
             <Button
               onClick={handleAssignLead}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-              disabled={!selectedStaffId || !selectedBank}
+              disabled={!selectedStaffId || !bankSelection}
             >
               <UserPlus className="mr-2 h-4 w-4" />
               Assign Lead & Make Visible to Staff
@@ -1291,24 +1191,8 @@ export default function LeadPipelinePage() {
 
       {/* Modals */}
       {selectedLead && !showFileTracker && (
-        <LeadDetailView lead={selectedLead} />
+        <LeadDetailView lead={selectedLead} setSelectedLead={setSelectedLead} />
       )}
-      {selectedLead &&
-        showFileTracker &&
-        selectedLead.selectedBank &&
-        selectedLead.assignedStaff && (
-          <FileStatusTracker
-            lead={selectedLead}
-            onClose={() => {
-              setShowFileTracker(false);
-              setSelectedLead(null);
-            }}
-            onUpdate={(leadId, updates) => {
-              updateLead(leadId, updates);
-              setLeads(getLeads());
-            }}
-          />
-        )}
     </div>
   );
 }

@@ -33,13 +33,6 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
 
-  useEffect(() => {
-    if (!user || user.type !== "official") {
-      router.push("/");
-      return;
-    }
-  }, [user, router]);
-
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 

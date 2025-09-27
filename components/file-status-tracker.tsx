@@ -37,10 +37,10 @@ import {
   Upload,
   Eye,
 } from "lucide-react";
-import { Lead } from "@/types/common";
+import { Lead, LeadForm } from "@/types/common";
 
 interface FileStatusTrackerProps {
-  lead: Lead;
+  lead: LeadForm;
   onClose: () => void;
   onUpdate: (leadId: string, updates: Partial<Lead>) => void;
 }
@@ -247,15 +247,15 @@ export function FileStatusTracker({
   onUpdate,
 }: FileStatusTrackerProps) {
   const [activeTab, setActiveTab] = useState("pipeline");
-  const [documentStatuses, setDocumentStatuses] = useState<
-    Record<string, "Yes" | "No">
-  >(lead.documentStatuses || {});
+  // const [documentStatuses, setDocumentStatuses] = useState<
+  //   Record<string, "Yes" | "No">
+  // >(lead.documentStatuses || {});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loanTypeFilter, setLoanTypeFilter] = useState("all");
-  const [remarks, setRemarks] = useState<Record<string, string>>(
-    lead.documentRemarks || {}
-  );
+  // const [remarks, setRemarks] = useState<Record<string, string>>(
+  //   lead.documentRemarks || {}
+  // );
 
   const [pipelineData, setPipelineData] = useState({
     fileStatus: lead.fileStatus || "pending",

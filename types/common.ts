@@ -80,6 +80,7 @@ export interface DocumentStatus {
 
 export interface Lead {
   id: string;
+
   // Basic Lead Information
   leadName?: string;
   clientName: string;
@@ -87,6 +88,10 @@ export interface Lead {
   email: string;
   dateOfBirth?: string;
   address: string;
+  currentAddress?: string; // ✅ newly added
+
+  // Personal Information
+  gender?: string; // ✅ newly added
 
   // Lead Details
   leadType: string; // Product Type (Home Loan, Personal Loan, etc.)
@@ -98,9 +103,15 @@ export interface Lead {
   // Financial Information
   cost: number;
   cibilScore: number;
+  annualIncome?: string;
+  incomeCategory?: string; // ✅ newly added
+  loanAmount?: string;
+  loanTenure?: number; // ✅ newly added
+  purpose?: string;
 
   // Application Status with color coding
   applicationStatus: "login" | "pending" | "sanctioned" | "rejected";
+  urgencyLevel?: string; // ✅ newly added
 
   // Bank Assignment
   selectedBank?: string;
@@ -114,6 +125,7 @@ export interface Lead {
 
   // Additional Information
   additionalInfo: string;
+  notes?: string;
   remarks?: string;
 
   // Timestamps and tracking
@@ -134,10 +146,8 @@ export interface Lead {
   assignedAt?: string;
   createdByStaff?: boolean;
   createdBy?: string;
-  annualIncome?: string;
-  loanAmount?: string;
-  purpose?: string;
-  notes?: string;
+
+  // Timeline & History
   timeline?: {
     date: string;
     status: string;
@@ -180,90 +190,137 @@ export interface StaffMember extends User {
   permissions?: Permission[];
   isActive: boolean;
 }
-
-// ---------------- Loan Application / KYC Form ----------------
 export interface LeadApplication {
-  id: string;
-  clientName: string;
-  contactNumber: string;
-  email: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  panNumber: string;
-  aadharNumber: string;
-
-  // Loan Information
-  loanTypes: string[];
-  incomeCategory: string;
-  employmentType: string;
-  companyName: string;
-  designation: string;
-  workExperience: string;
-  monthlyIncome: string;
-  loanAmount: string;
-  loanPurpose: string;
-
-  // Property Info
-  propertyType: string;
-  propertyLocation: string;
-  propertyValue: string;
-
-  // Source & Assignment
-  leadSource: string;
-  assignedBranch: string;
-  assignedTo: string;
-  createdBy: string;
-
-  // Status Lifecycle
-  status: "new" | "assigned" | "in-progress" | "sanctioned" | "rejected";
-  createdAt: string;
-
-  // Documents
-  documents: {
-    type: string;
-    requirementId: string;
-    status: "pending" | "provided" | "verified";
-  }[];
-
-  // Optional Fields
+  // 1. Basic Personal Details
+  fullName: string;
+  mobileNumber: string;
+  email?: string;
+  dateOfBirth?: string;
+  gender?: "Male" | "Female" | "Other" | string;
   permanentAddress?: string;
   currentAddress?: string;
-  otherLoanType?: string;
+
+  // 2. Loan Type (multi-select)
+  loanTypes: string[]; // e.g., ["Home Loan", "Car Loan"]
+
+  // 3. Income Category
+  incomeCategory:
+    | "Salaried"
+    | "Self-Employed"
+    | "Business Owner"
+    | "NRI"
+    | "Retired";
+
+  // 4. Loan Requirement Details
+  loanAmount?: number;
+  loanTenure?: number; // months
+  preferredBank?: string;
+  urgencyLevel?: "Low" | "Medium" | "High" | "Immediate";
+  purposeOfLoan?: string;
+
+  // 5. Additional Notes
+  notes?: string;
+}
+
+export interface LeadForm {
+  id?: string;
+  // 🔹 Core Required Fields
+  leadName?: string; // maps to lead_name
+  clientName?: string; // maps to client_name
+  contactNumber?: string; // maps to contact_number
+  email?: string; // maps to email
+  dateOfBirth?: string; // maps to date_of_birth (ISO string)
+  leadType?: string;
+
+  // 🔹 Customer Information
+  customerName?: string;
+  gender?: IGender;
+  permanentAddress?: string;
+  currentAddress?: string;
+  completeAddress?: string;
+
+  // 🔹 Loan Information
+  loanTypes?: string[];
+  incomeCategory?: IIncomeCategory;
+  loanAmount?: string;
+  loanTenure?: number; // months
+  urgencyLevel?: IUrgencyLevel;
+  purposeOfLoan?: string;
+  annualIncome?: string;
+
+  // 🔹 Lead Assignment
+  leadSource?: string;
+  assignedBranch?: string; // UUID ref
+  assignedStaff?: string; // UUID ref
+  ownerManagerAssignment?: string; // UUID ref
+
+  // 🔹 Bank Assignment
+  bankSelection?: string;
+  bankBranch?: string;
+  bankStaffMember?: string;
+  bankDocuments?: any; // JSONB (can refine later)
+
+  // 🔹 Financial & Scoring
+  cibilScore?: number;
+  estimatedCost?: number;
+
+  // 🔹 Application Workflow
+  applicationStatus?: IApplicationStatus;
+  documentsSubmittedAt?: string;
+  bankAssignedAt?: string;
+  statusUpdatedAt?: string;
+  assignedAt?: string;
+
+  // 🔹 Notes & Additional Info
+  notes?: string;
+  statusRemarks?: string;
+  additionalInformation?: string;
+
+  // 🔹 Tracking
+  createdAt?: string;
+  updatedAt?: string;
+  branchId?: string; // UUID ref
+  createdBy?: string; // UUID ref
+
+  // 🔹 Salaried
   employerName?: string;
+  designation?: string;
   officeAddress?: string;
-  monthlyGrossSalary?: string;
-  yearsOfExperience?: string;
+  monthlyGrossSalary?: string; // or number
+  yearsOfExperience?: string; // or number
+
+  // 🔹 Self-Employed / Business Owner
   businessName?: string;
   businessType?: string;
   businessAddress?: string;
-  annualTurnover?: string;
-  yearsInBusiness?: string;
+  annualTurnover?: string; // or number
+  yearsInBusiness?: string; // or number
+
+  // 🔹 NRI
   countryOfResidence?: string;
   jobTypeNRI?: string;
-  annualIncomeFC?: string;
-  loanTenure?: string;
-  preferredBank?: string;
-  urgencyLevel?: string;
-  purpose?: string;
+  annualIncomeFC?: string; // or number
 
-  propertyDetails?: {
-    type?: string;
-    value?: string;
-    location?: string;
-  };
+  // 🔹 Property Details (Home Loan / LAP)
+  propertyType?: "residential" | "commercial"; // --?
+  propertyValue?: number; // --?
+  propertyLocation?: string; // --?
 
-  // Carryover from workflow
-  leadType?: string;
-  cibilScore?: string;
-  ownerManagerAssignment?: string;
-  applicationStatus?: string;
-  documentsSubmittedAt?: string;
-  statusUpdatedAt?: string;
-
-  assignedStaff?: string;
-  selectedBank?: string;
-
-  // Edit Tracking
-  editHistory?: { editedBy: string; editedAt: string; changes: string[] }[];
+  assignmentStatus?: string;
+  assignedStaffName?: string;
+  ownerManagerAssignmentName?: string;
 }
+
+export type IGender = "Male" | "Female" | "Other";
+export type IIncomeCategory =
+  | "Salaried"
+  | "Self-Employed"
+  | "Business Owner"
+  | "NRI"
+  | "Retired";
+export type IApplicationStatus =
+  | "login"
+  | "pending"
+  | "sanctioned"
+  | "rejected";
+export type IUrgencyLevel = "Low" | "Medium" | "High" | "Immediate";

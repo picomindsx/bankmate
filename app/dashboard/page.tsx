@@ -64,16 +64,6 @@ export default function DashboardPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/");
-      return;
-    }
-
-    if (user.type !== "official") {
-      router.push("/employee-dashboard");
-      return;
-    }
-
     getBranches().then((branchList) => setBranches(branchList));
 
     const recentLeads = getLeads().filter(

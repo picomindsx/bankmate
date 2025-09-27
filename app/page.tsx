@@ -1,83 +1,93 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Building2 } from "lucide-react"
-import Image from "next/image"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, Building2 } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [loginData, setLoginData] = useState({ username: "", password: "" })
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [otpData, setOtpData] = useState({ phone: "", otp: "", newPassword: "" })
-  const [otpSent, setOtpSent] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [otpData, setOtpData] = useState({
+    phone: "",
+    otp: "",
+    newPassword: "",
+  });
+  const [otpSent, setOtpSent] = useState(false);
 
-  const { login } = useAuth()
-  const router = useRouter()
+  const { login, reAuthenticate } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
-      const success = await login(loginData.username, loginData.password)
+      const success = await login(loginData.username, loginData.password);
       if (success) {
-        const storedUser = localStorage.getItem("bankmate-user")
+        const storedUser = localStorage.getItem("bankmate-user");
         if (storedUser) {
-          const user = JSON.parse(storedUser)
+          const user = JSON.parse(storedUser);
           if (user.type === "employee") {
-            router.push("/employee-dashboard")
+            router.push("/employee-dashboard");
           } else {
-            router.push("/dashboard")
+            router.push("/dashboard");
           }
         } else {
-          router.push("/dashboard")
+          router.push("/dashboard");
         }
       } else {
-        setError("Invalid credentials. Please try again.")
+        setError("Invalid credentials. Please try again.");
       }
     } catch (err) {
-      setError("Login failed. Please try again.")
+      setError("Login failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleForgotPassword = () => {
-    setShowForgotPassword(true)
-  }
+    setShowForgotPassword(true);
+  };
 
   const handleSendOTP = () => {
     // Mock OTP sending
-    setOtpSent(true)
-    setError("")
-  }
+    setOtpSent(true);
+    setError("");
+  };
 
   const handleResetPassword = () => {
     // Mock password reset
     if (otpData.otp === "123456") {
       // Mock OTP verification
-      setShowForgotPassword(false)
-      setOtpSent(false)
-      setOtpData({ phone: "", otp: "", newPassword: "" })
-      setError("")
-      alert("Password reset successfully!")
+      setShowForgotPassword(false);
+      setOtpSent(false);
+      setOtpData({ phone: "", otp: "", newPassword: "" });
+      setError("");
+      alert("Password reset successfully!");
     } else {
-      setError("Invalid OTP. Please try again.")
+      setError("Invalid OTP. Please try again.");
     }
-  }
+  };
 
   if (showForgotPassword) {
     return (
@@ -94,8 +104,12 @@ export default function LoginPage() {
                   className="rounded-lg shadow-lg"
                 />
               </div>
-              <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-              <CardDescription>Enter your mobile number to receive OTP</CardDescription>
+              <CardTitle className="text-2xl font-bold">
+                Reset Password
+              </CardTitle>
+              <CardDescription>
+                Enter your mobile number to receive OTP
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!otpSent ? (
@@ -107,7 +121,9 @@ export default function LoginPage() {
                       type="tel"
                       placeholder="Enter your mobile number"
                       value={otpData.phone}
-                      onChange={(e) => setOtpData({ ...otpData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setOtpData({ ...otpData, phone: e.target.value })
+                      }
                     />
                   </div>
                   <Button onClick={handleSendOTP} className="w-full">
@@ -123,7 +139,9 @@ export default function LoginPage() {
                       type="text"
                       placeholder="Enter 6-digit OTP"
                       value={otpData.otp}
-                      onChange={(e) => setOtpData({ ...otpData, otp: e.target.value })}
+                      onChange={(e) =>
+                        setOtpData({ ...otpData, otp: e.target.value })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -133,7 +151,9 @@ export default function LoginPage() {
                       type="password"
                       placeholder="Enter new password"
                       value={otpData.newPassword}
-                      onChange={(e) => setOtpData({ ...otpData, newPassword: e.target.value })}
+                      onChange={(e) =>
+                        setOtpData({ ...otpData, newPassword: e.target.value })
+                      }
                     />
                   </div>
                   <Button onClick={handleResetPassword} className="w-full">
@@ -149,10 +169,10 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setShowForgotPassword(false)
-                  setOtpSent(false)
-                  setOtpData({ phone: "", otp: "", newPassword: "" })
-                  setError("")
+                  setShowForgotPassword(false);
+                  setOtpSent(false);
+                  setOtpData({ phone: "", otp: "", newPassword: "" });
+                  setError("");
                 }}
                 className="w-full"
               >
@@ -162,7 +182,7 @@ export default function LoginPage() {
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -183,7 +203,9 @@ export default function LoginPage() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl text-balance">
               Bankmate Solutions
             </h1>
-            <p className="text-lg md:text-xl font-medium text-white/90 drop-shadow-lg">Business Management System</p>
+            <p className="text-lg md:text-xl font-medium text-white/90 drop-shadow-lg">
+              Business Management System
+            </p>
           </div>
         </div>
 
@@ -195,7 +217,9 @@ export default function LoginPage() {
                 <Building2 className="h-6 w-6" />
                 Login Portal
               </CardTitle>
-              <CardDescription className="text-base">Choose your login type to continue</CardDescription>
+              <CardDescription className="text-base">
+                Choose your login type to continue
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <Tabs defaultValue="official" className="w-full">
@@ -213,7 +237,12 @@ export default function LoginPage() {
                         type="text"
                         placeholder="Enter username"
                         value={loginData.username}
-                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        onChange={(e) =>
+                          setLoginData({
+                            ...loginData,
+                            username: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -225,7 +254,12 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter password"
                           value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                          onChange={(e) =>
+                            setLoginData({
+                              ...loginData,
+                              password: e.target.value,
+                            })
+                          }
                           required
                         />
                         <Button
@@ -235,7 +269,11 @@ export default function LoginPage() {
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -244,7 +282,11 @@ export default function LoginPage() {
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
                       {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
@@ -259,7 +301,12 @@ export default function LoginPage() {
                         type="tel"
                         placeholder="Enter mobile number"
                         value={loginData.username}
-                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        onChange={(e) =>
+                          setLoginData({
+                            ...loginData,
+                            username: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -271,7 +318,12 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter password"
                           value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                          onChange={(e) =>
+                            setLoginData({
+                              ...loginData,
+                              password: e.target.value,
+                            })
+                          }
                           required
                         />
                         <Button
@@ -281,7 +333,11 @@ export default function LoginPage() {
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -290,7 +346,11 @@ export default function LoginPage() {
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
                       {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
@@ -311,5 +371,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

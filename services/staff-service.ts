@@ -31,7 +31,7 @@ export const addStaff = async (
     .single();
 
   if (userError) {
-    toast.error("Error adding staff");
+    toast.error("Error adding staff", { description: userError.details });
     console.error(userError);
     return null;
   }
@@ -68,6 +68,16 @@ export const getStaff = async (): Promise<User[]> => {
     .select("*")
     .eq("type", "employee")
     .eq("role", "staff");
+
+  if (error) {
+    console.error("Error fetching staff:", error);
+    return [];
+  }
+  return staffList as User[];
+};
+
+export const getAllStaff = async (): Promise<User[]> => {
+  const { data: staffList, error } = await supabase.from("users").select("*");
 
   if (error) {
     console.error("Error fetching staff:", error);
@@ -120,7 +130,7 @@ export const updateStaff = async (
     .single();
 
   if (userError) {
-    toast.error("Error updating staff");
+    toast.error("Error updating staff", { description: userError.details });
     console.error(userError);
     return false;
   }

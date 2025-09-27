@@ -20,42 +20,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
-import { addLead } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
-import { Branch, User } from "@/types/common";
+import { Branch, LeadForm, User } from "@/types/common";
+import { emptyLeadForm } from "@/lib/consts";
+import { addNewLead } from "@/services/lead-service";
 
 export default function AddLeadPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    clientName: "",
-    contactNumber: "",
-    email: "",
-    address: "",
-    leadType: "Home Loan",
-    leadSource: "Social Media",
-    cost: "",
-    cibilScore: "",
-    additionalInfo: "",
-    branchId: "",
-    assignedStaff: "unassigned",
-  });
-
-  const [customInputs, setCustomInputs] = useState({
-    leadType: "",
-    leadSource: "",
-    branchId: "",
-    assignedStaff: "",
-  });
-
-  const [showCustomInput, setShowCustomInput] = useState({
-    leadType: false,
-    leadSource: false,
-    branchId: false,
-    assignedStaff: false,
-  });
+  const [formData, setFormData] = useState<Partial<LeadForm>>(emptyLeadForm);
 
   const [branches, setBranches] = useState([] as Branch[]);
   const [staffMembers, setStaffMembers] = useState([] as User[]);
@@ -74,19 +49,13 @@ export default function AddLeadPage() {
     setIsSubmitting(true);
 
     try {
-      const leadData = {
+      const leadData: LeadForm = {
         ...formData,
-        cost: Number.parseFloat(formData.cost) || 0,
-        cibilScore: Number.parseInt(formData.cibilScore) || 0,
-        applicationStatus: "login" as const,
-        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        branchId: formData.branchId || branches[0]?.id || "1",
-        assignedStaff:
-          formData.assignedStaff === "unassigned" ? "" : formData.assignedStaff,
+        assignedBranch: formData.branchId || branches[0]?.id || "1",
       };
 
-      addLead(leadData);
+      addNewLead(leadData);
       router.push("/dashboard/total-leads");
     } catch (error) {
       console.error("Error adding lead:", error);
@@ -97,24 +66,6 @@ export default function AddLeadPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCustomSelection = (field: string, value: string) => {
-    if (value === "custom") {
-      setShowCustomInput((prev) => ({ ...prev, [field]: true }));
-    } else {
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
-      handleInputChange(field, value);
-    }
-  };
-
-  const handleCustomInputSubmit = (field: string) => {
-    const customValue = customInputs[field as keyof typeof customInputs];
-    if (customValue.trim()) {
-      handleInputChange(field, customValue);
-      setShowCustomInput((prev) => ({ ...prev, [field]: false }));
-      setCustomInputs((prev) => ({ ...prev, [field]: "" }));
-    }
   };
 
   return (
@@ -179,134 +130,56 @@ export default function AddLeadPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="leadType">Lead Type *</Label>
-                  {showCustomInput.leadType ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter custom lead type"
-                        value={customInputs.leadType}
-                        onChange={(e) =>
-                          setCustomInputs((prev) => ({
-                            ...prev,
-                            leadType: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => handleCustomInputSubmit("leadType")}
-                        size="sm"
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setShowCustomInput((prev) => ({
-                            ...prev,
-                            leadType: false,
-                          }))
-                        }
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Select
-                      value={formData.leadType}
-                      onValueChange={(value) =>
-                        handleCustomSelection("leadType", value)
-                      }
-                    >
-                      <SelectTrigger className="bg-white/80 border-teal-300/50">
-                        <SelectValue placeholder="Select lead type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Home Loan">Home Loan</SelectItem>
-                        <SelectItem value="Personal Loan">
-                          Personal Loan
-                        </SelectItem>
-                        <SelectItem value="Business Loan">
-                          Business Loan
-                        </SelectItem>
-                        <SelectItem value="Car Loan">Car Loan</SelectItem>
-                        <SelectItem value="Education Loan">
-                          Education Loan
-                        </SelectItem>
-                        <SelectItem value="Medical Loan">
-                          Medical Loan
-                        </SelectItem>
-                        <SelectItem value="Travel Loan">Travel Loan</SelectItem>
-                        <SelectItem value="Credit Card">Credit Card</SelectItem>
-                        <SelectItem value="custom">
-                          + Add Custom Lead Type
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+
+                  <Select
+                    value={formData.leadType}
+                    onValueChange={(value) =>
+                      handleInputChange("leadType", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white/80 border-teal-300/50">
+                      <SelectValue placeholder="Select lead type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Home Loan">Home Loan</SelectItem>
+                      <SelectItem value="Personal Loan">
+                        Personal Loan
+                      </SelectItem>
+                      <SelectItem value="Business Loan">
+                        Business Loan
+                      </SelectItem>
+                      <SelectItem value="Car Loan">Car Loan</SelectItem>
+                      <SelectItem value="Education Loan">
+                        Education Loan
+                      </SelectItem>
+                      <SelectItem value="Medical Loan">Medical Loan</SelectItem>
+                      <SelectItem value="Travel Loan">Travel Loan</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="leadSource">Lead Source</Label>
-                  {showCustomInput.leadSource ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter custom lead source"
-                        value={customInputs.leadSource}
-                        onChange={(e) =>
-                          setCustomInputs((prev) => ({
-                            ...prev,
-                            leadSource: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => handleCustomInputSubmit("leadSource")}
-                        size="sm"
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setShowCustomInput((prev) => ({
-                            ...prev,
-                            leadSource: false,
-                          }))
-                        }
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Select
-                      value={formData.leadSource}
-                      onValueChange={(value) =>
-                        handleCustomSelection("leadSource", value)
-                      }
-                    >
-                      <SelectTrigger className="bg-white/80 border-teal-300/50">
-                        <SelectValue placeholder="Select lead source" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Social Media">
-                          Social Media
-                        </SelectItem>
-                        <SelectItem value="Walk-in">Walk-in</SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
-                        <SelectItem value="Website">Website</SelectItem>
-                        <SelectItem value="Phone Call">Phone Call</SelectItem>
-                        <SelectItem value="Email">Email</SelectItem>
-                        <SelectItem value="custom">
-                          + Add Custom Lead Source
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+
+                  <Select
+                    value={formData.leadSource}
+                    onValueChange={(value) =>
+                      handleInputChange("leadSource", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white/80 border-teal-300/50">
+                      <SelectValue placeholder="Select lead source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Social Media">Social Media</SelectItem>
+                      <SelectItem value="Walk-in">Walk-in</SelectItem>
+                      <SelectItem value="Referral">Referral</SelectItem>
+                      <SelectItem value="Website">Website</SelectItem>
+                      <SelectItem value="Phone Call">Phone Call</SelectItem>
+                      <SelectItem value="Email">Email</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -314,8 +187,10 @@ export default function AddLeadPage() {
                   <Input
                     id="cost"
                     type="number"
-                    value={formData.cost}
-                    onChange={(e) => handleInputChange("cost", e.target.value)}
+                    value={formData.estimatedCost}
+                    onChange={(e) =>
+                      handleInputChange("estimatedCost", e.target.value)
+                    }
                     className="bg-white/80 border-teal-300/50"
                   />
                 </div>
@@ -337,126 +212,52 @@ export default function AddLeadPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="branchId">Branch</Label>
-                  {showCustomInput.branchId ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter custom branch name"
-                        value={customInputs.branchId}
-                        onChange={(e) =>
-                          setCustomInputs((prev) => ({
-                            ...prev,
-                            branchId: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => handleCustomInputSubmit("branchId")}
-                        size="sm"
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setShowCustomInput((prev) => ({
-                            ...prev,
-                            branchId: false,
-                          }))
-                        }
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Select
-                      value={formData.branchId}
-                      onValueChange={(value) =>
-                        handleCustomSelection("branchId", value)
-                      }
-                    >
-                      <SelectTrigger className="bg-white/80 border-teal-300/50">
-                        <SelectValue placeholder="Select branch" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {branches.map((branch) => (
-                          <SelectItem key={branch.id} value={branch.id}>
-                            {branch.name}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="custom">
-                          + Add Custom Branch
+
+                  <Select
+                    value={formData.branchId}
+                    onValueChange={(value) =>
+                      handleInputChange("branchId", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white/80 border-teal-300/50">
+                      <SelectValue placeholder="Select branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          {branch.name}
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="assignedStaff">
                     Assign to Staff (Optional)
                   </Label>
-                  {showCustomInput.assignedStaff ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter custom staff member"
-                        value={customInputs.assignedStaff}
-                        onChange={(e) =>
-                          setCustomInputs((prev) => ({
-                            ...prev,
-                            assignedStaff: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => handleCustomInputSubmit("assignedStaff")}
-                        size="sm"
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setShowCustomInput((prev) => ({
-                            ...prev,
-                            assignedStaff: false,
-                          }))
-                        }
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Select
-                      value={formData.assignedStaff}
-                      onValueChange={(value) =>
-                        handleCustomSelection("assignedStaff", value)
-                      }
-                    >
-                      <SelectTrigger className="bg-white/80 border-teal-300/50">
-                        <SelectValue placeholder="Select staff member" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {staffMembers.map((staff) => (
-                          <SelectItem
-                            key={staff.id}
-                            value={staff.name || staff.username}
-                          >
-                            {staff.name || staff.username} - {staff.designation}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="custom">
-                          + Add Custom Staff Member
+
+                  <Select
+                    value={formData.assignedStaff}
+                    onValueChange={(value) =>
+                      handleInputChange("assignedStaff", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-white/80 border-teal-300/50">
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {staffMembers.map((staff) => (
+                        <SelectItem
+                          key={staff.id}
+                          value={staff.name || staff.username}
+                        >
+                          {staff.name || staff.username} - {staff.designation}
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -464,8 +265,10 @@ export default function AddLeadPage() {
                 <Label htmlFor="address">Address</Label>
                 <Textarea
                   id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  value={formData.permanentAddress}
+                  onChange={(e) =>
+                    handleInputChange("permanentAddress", e.target.value)
+                  }
                   className="bg-white/80 border-teal-300/50"
                   rows={3}
                 />
@@ -475,9 +278,9 @@ export default function AddLeadPage() {
                 <Label htmlFor="additionalInfo">Additional Information</Label>
                 <Textarea
                   id="additionalInfo"
-                  value={formData.additionalInfo}
+                  value={formData.additionalInformation}
                   onChange={(e) =>
-                    handleInputChange("additionalInfo", e.target.value)
+                    handleInputChange("additionalInformation", e.target.value)
                   }
                   className="bg-white/80 border-teal-300/50"
                   rows={3}

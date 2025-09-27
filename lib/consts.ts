@@ -5,6 +5,9 @@ import {
   Branch,
   Lead,
   LeadApplication,
+  LeadForm,
+  IGender,
+  IIncomeCategory,
 } from "@/types/common";
 
 export const ALL_PERMISSIONS: Permission[] = [
@@ -468,32 +471,155 @@ export const leads: Lead[] = [
   // Leads data will be stored here
 ];
 
-export const emptyLeadApplication: LeadApplication = {
+export const emptyLead: Lead = {
+  id: "",
+  // Basic Lead Information
+  leadName: "",
   clientName: "",
   contactNumber: "",
   email: "",
   dateOfBirth: "",
-  gender: "",
+  gender: "", // ✅ new field
   address: "",
-  panNumber: "",
-  aadharNumber: "",
-  loanTypes: [],
-  incomeCategory: "",
-  employmentType: "",
-  companyName: "",
-  designation: "",
-  workExperience: "",
-  monthlyIncome: "",
-  loanAmount: "",
-  loanPurpose: "",
-  propertyType: "",
-  propertyLocation: "",
-  propertyValue: "",
+  currentAddress: "", // ✅ new field
+
+  // Lead Details
+  leadType: "",
   leadSource: "",
   assignedBranch: "",
+  assignedStaff: "",
+  ownerManagerAssignment: "",
+
+  // Financial Information
+  cost: 0,
+  cibilScore: 0,
+  annualIncome: "",
+  incomeCategory: "", // ✅ new field
+  loanAmount: "",
+  loanTenure: 0, // ✅ new field
+  purpose: "",
+
+  // Application Status with color coding
+  applicationStatus: "pending",
+  urgencyLevel: "", // ✅ new field
+
+  // Bank Assignment
+  selectedBank: "",
+  bankBranch: "",
+  bankStaff: "",
+  bankDocuments: [],
+
+  // Enhanced Document Tracking
+  documents: [],
+  documentCompletionStatus: "pending",
+
+  // Additional Information
+  additionalInfo: "",
   notes: "",
-  status: "new",
-  assignedTo: "",
-  createdBy: "Current Staff Member",
-  documents: {},
+  remarks: "",
+
+  // Timestamps
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  branchId: "",
+  documentsSubmittedAt: "",
+  bankAssignedAt: "",
+  statusUpdatedAt: "",
+
+  // Legacy
+  assignedAgent: "",
+  status: "",
+
+  // Lead assignment workflow
+  isVisibleToStaff: false,
+  assignmentStatus: "",
+  assignedAt: "",
+  createdByStaff: false,
+  createdBy: "",
+
+  // Tracking
+  timeline: [],
+  editHistory: [],
 };
+
+export const emptyLeadForm: LeadForm = {
+  // Core Required
+  leadName: "",
+  clientName: "",
+  contactNumber: "",
+  email: "",
+  dateOfBirth: "",
+  leadType: "",
+
+  // Customer Info
+  customerName: "",
+  gender: undefined,
+  permanentAddress: "",
+  currentAddress: "",
+  completeAddress: "",
+
+  // Loan Info
+  loanTypes: [],
+  incomeCategory: undefined,
+  loanAmount: undefined,
+  loanTenure: undefined,
+  urgencyLevel: undefined,
+  purposeOfLoan: "",
+  annualIncome: "",
+
+  // Lead Assignment
+  leadSource: "",
+  assignedBranch: undefined,
+  assignedStaff: undefined,
+  ownerManagerAssignment: undefined,
+
+  // Bank Assignment
+  bankSelection: "",
+  bankBranch: "",
+  bankStaffMember: "",
+  bankDocuments: undefined,
+
+  // Financial & Scoring
+  cibilScore: undefined,
+  estimatedCost: undefined,
+
+  // Application Workflow
+  applicationStatus: undefined,
+  documentsSubmittedAt: undefined,
+  bankAssignedAt: undefined,
+  statusUpdatedAt: undefined,
+  assignedAt: undefined,
+
+  // Notes & Info
+  notes: "",
+  statusRemarks: "",
+  additionalInformation: "",
+
+  // Tracking
+  createdAt: undefined,
+  updatedAt: undefined,
+  branchId: undefined,
+  createdBy: undefined,
+};
+
+export const GENDER_OPTIONS: IGender[] = ["Male", "Female", "Other"];
+
+export const LOAN_TYPES = [
+  "Home Loan",
+  "Personal Loan",
+  "Business Loan",
+  "Car Loan",
+  "Two-Wheeler Loan",
+  "Gold Loan",
+  "Loan Against Property (LAP)",
+  "NRI Loan",
+  "Education Loan",
+];
+
+export const INCOME_CATEGORY: IIncomeCategory[] = [
+  "Salaried",
+  "Self-Employed",
+  "Business Owner",
+  "NRI",
+  "Retired",
+];
