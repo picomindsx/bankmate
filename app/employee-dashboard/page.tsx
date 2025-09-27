@@ -68,7 +68,12 @@ import {
   Lead,
   LeadForm,
 } from "@/types/common";
-import { emptyLeadForm, GENDER_OPTIONS, INCOME_CATEGORY, LOAN_TYPES } from "@/lib/consts";
+import {
+  emptyLeadForm,
+  GENDER_OPTIONS,
+  INCOME_CATEGORY,
+  LOAN_TYPES,
+} from "@/lib/consts";
 
 interface CustomOption {
   id: string;
