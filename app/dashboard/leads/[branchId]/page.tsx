@@ -932,8 +932,6 @@ export default function LeadManagementPage() {
               return acc;
             }, {} as Record<string, LeadForm[]>);
 
-            console.log(leadsByType);
-
             return (
               <div className="space-y-8">
                 {Object.entries(leadsByType).map(([loanType, typeLeads]) => (
