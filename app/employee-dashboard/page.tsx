@@ -53,7 +53,6 @@ import {
   updateDocumentStatus,
 } from "@/services/document-service";
 import {
-  addLead,
   addNewLead,
   assignLeadToStaff,
   getAssignedLeads,
@@ -75,6 +74,7 @@ import {
   LOAN_TYPES,
 } from "@/lib/consts";
 import LeadDetailView from "@/components/lead-detail-view";
+import { getStatusColor } from "@/lib/utils";
 
 interface CustomOption {
   id: string;
@@ -178,7 +178,7 @@ const EmployeeDashboard = () => {
       ...(newLead as LeadForm),
       createdAt: new Date().toISOString(),
       createdBy: user!.id,
-      branchId: user!.branchId,
+      assignedBranch: user!.branchId,
       // documents: {
       //   "PAN Card": false,
       //   "Aadhar Card": false,
@@ -410,21 +410,6 @@ const EmployeeDashboard = () => {
   // )
   // const completedLeads = myLeads.filter((lead) => lead.applicationStatus === "sanctioned").length
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "login":
-        return "bg-blue-500";
-      case "pending":
-        return "bg-orange-500";
-      case "sanctioned":
-        return "bg-green-500";
-      case "rejected":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
   const getDocumentStatusColor = (status: string) => {
     switch (status) {
       case "verified":
@@ -582,7 +567,7 @@ const EmployeeDashboard = () => {
       <header className="border-b bg-card">
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <BackButton href="/dashboard" label="Back to Dashboard" />
+            {/* <BackButton href="/dashboard" label="Back to Dashboard" /> */}
             <Image
               src="/images/bankmate-logo.png"
               alt="Bankmate Solutions Logo"
