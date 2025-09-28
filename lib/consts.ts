@@ -599,7 +599,7 @@ export const emptyLeadForm: LeadForm = {
   createdBy: undefined,
 };
 
-export const GENDER_OPTIONS: IGender[] = ["Male", "Female", "Other"];
+export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
 
 export const LOAN_TYPES = [
   "Home Loan",
@@ -613,13 +613,13 @@ export const LOAN_TYPES = [
   "Education Loan",
 ];
 
-export const INCOME_CATEGORY: IIncomeCategory[] = [
+export const INCOME_CATEGORY = [
   "Salaried",
   "Self-Employed",
   "Business Owner",
   "NRI",
   "Retired",
-];
+] as const;
 
 export const LEAD_SOURCES = [
   "Social Media",
@@ -644,9 +644,55 @@ export const BANKS = [
   "Kotak Mahindra Bank",
 ];
 
-export const APPLICATION_STATUS: IApplicationStatus[] = [
+export const APPLICATION_STATUS = [
   "login",
   "pending",
   "sanctioned",
   "rejected",
-];
+] as const;
+
+export const LOAN_DOCUMENTS = [
+  // KYC Documents
+  "Aadhaar Card",
+  "Passport",
+  "Voter ID Card",
+  "Driving License",
+  "PAN Card",
+  "Utility Bill",
+  "Ration Card",
+  "Bank Statement (as Address Proof)",
+  "Rent Agreement (as Address Proof)",
+  "Passport-sized Photos",
+  "Business Registration (GST / MSME / Incorporation Certificate)",
+  "Partnership Deed",
+  "MOA (Memorandum of Association)",
+  "AOA (Articles of Association)",
+
+  // Income Documents
+  "Salary Slips (Last 3 Months)",
+  "Bank Statement (Last 6 Months)",
+  "Form 16",
+  "ITR (Last 2 Years)",
+  "Profit & Loss Statement",
+  "Balance Sheet",
+  "Sales Invoices",
+
+  // Legal Documents
+  "Sale Deed / Agreement to Sale",
+  "Title Deed",
+  "Possession Certificate",
+  "Non-Attachment Certificate",
+  "Encumbrance Certificate",
+  "Location Sketch",
+  "Family Membership Certificate",
+  "Income Certificate",
+  "Thandaper Certificate",
+  "Business License",
+  "Rent Agreement (If Office Rented)",
+  "Fee Structure (for Education Loans)",
+  "Admission Letter (for Education Loans)",
+] as const;
+
+export const DOCUMENT_STATUS = ["pending", "collected", "submitted"] as const;
+
+export const BANK_STATUS = ["pending", "assigned"] as const;

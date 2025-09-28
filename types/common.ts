@@ -1,3 +1,12 @@
+import {
+  APPLICATION_STATUS,
+  BANK_STATUS,
+  DOCUMENT_STATUS,
+  GENDER_OPTIONS,
+  INCOME_CATEGORY,
+  LOAN_DOCUMENTS,
+} from "@/lib/consts";
+
 export interface User {
   id: string;
   username: string;
@@ -309,18 +318,15 @@ export interface LeadForm {
   assignmentStatus?: string;
   assignedStaffName?: string;
   ownerManagerAssignmentName?: string;
+  documents?: ILoanDocument[];
+  documentStatus?: IDocumentStatus;
+  bankStatus?: IBankStatus;
 }
 
-export type IGender = "Male" | "Female" | "Other";
-export type IIncomeCategory =
-  | "Salaried"
-  | "Self-Employed"
-  | "Business Owner"
-  | "NRI"
-  | "Retired";
-export type IApplicationStatus =
-  | "login"
-  | "pending"
-  | "sanctioned"
-  | "rejected";
+export type IGender = (typeof GENDER_OPTIONS)[number];
+export type IIncomeCategory = (typeof INCOME_CATEGORY)[number];
+export type IApplicationStatus = (typeof APPLICATION_STATUS)[number];
 export type IUrgencyLevel = "Low" | "Medium" | "High" | "Immediate";
+export type ILoanDocument = (typeof LOAN_DOCUMENTS)[number];
+export type IDocumentStatus = (typeof DOCUMENT_STATUS)[number];
+export type IBankStatus = (typeof BANK_STATUS)[number];

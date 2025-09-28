@@ -1611,7 +1611,7 @@ const EmployeeDashboard = () => {
           lead={selectedLead}
           setLeads={() => {}}
           setSelectedLead={setSelectedLead}
-          disableEdit
+          // disableEdit
         />
       )}
     </div>

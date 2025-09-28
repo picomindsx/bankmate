@@ -1,4 +1,8 @@
-import { IApplicationStatus } from "@/types/common";
+import {
+  IApplicationStatus,
+  IBankStatus,
+  IDocumentStatus,
+} from "@/types/common";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -50,6 +54,30 @@ export const getStatusColor = (status: IApplicationStatus) => {
       return "bg-green-500";
     case "rejected":
       return "bg-red-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+export const getDocumentStatusColor = (status: IDocumentStatus) => {
+  switch (status) {
+    case "collected":
+      return "bg-blue-500";
+    case "pending":
+      return "bg-gray-500";
+    case "submitted":
+      return "bg-green-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+export const getBankStatusColor = (status: IBankStatus) => {
+  switch (status) {
+    case "pending":
+      return "bg-gray-500";
+    case "assigned":
+      return "bg-green-500";
     default:
       return "bg-gray-500";
   }
