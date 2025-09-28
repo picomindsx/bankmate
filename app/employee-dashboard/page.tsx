@@ -628,8 +628,10 @@ const EmployeeDashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Welcome, {user.name}</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-2xl text-white font-bold mb-2">
+                Welcome, {user.name}
+              </h2>
+              <p className="text-white/65">
                 Manage your assigned leads and document workflows. Leads will
                 appear here only after being assigned by your manager. This
                 includes leads you created, leads from social media, and leads
