@@ -1,5 +1,6 @@
-import { ROLE_PERMISSIONS, ALL_PERMISSIONS, staff } from "@/lib/consts";
+import { ROLE_PERMISSIONS, ALL_PERMISSIONS } from "@/lib/consts";
 import { supabase } from "@/lib/supabase";
+import { mapDbList, mapDbRow } from "@/lib/utils";
 import { User } from "@/types/common";
 import { toast } from "sonner";
 
@@ -44,7 +45,7 @@ export const addStaff = async (
 
   if (roleError) {
     console.error("Error fetching role permissions:", roleError);
-    return insertedUser as User; // User still created
+    return mapDbRow<User>(insertedUser); // User still created
   }
 
   // Attach role permissions (if needed for local object, not DB)
@@ -73,7 +74,7 @@ export const getStaff = async (): Promise<User[]> => {
     console.error("Error fetching staff:", error);
     return [];
   }
-  return staffList as User[];
+  return mapDbList<User>(staffList);
 };
 
 export const getAllStaff = async (): Promise<User[]> => {
@@ -83,7 +84,7 @@ export const getAllStaff = async (): Promise<User[]> => {
     console.error("Error fetching staff:", error);
     return [];
   }
-  return staffList as User[];
+  return mapDbList<User>(staffList);
 };
 
 export const getStaffById = async (id: string): Promise<User | null> => {
@@ -99,7 +100,7 @@ export const getStaffById = async (id: string): Promise<User | null> => {
     console.error("Error fetching staff:", error);
     return null;
   }
-  return staff as User;
+  return mapDbRow<User>(staff);
 };
 
 export const updateStaff = async (
@@ -161,12 +162,12 @@ export const updateStaffPassword = (
   newPassword: string,
   updatedBy: string
 ): boolean => {
-  const staffIndex = staff.findIndex((s) => s.id === staffId);
-  if (staffIndex !== -1) {
-    staff[staffIndex].password = newPassword;
-    // In a real app, you'd log this password change
-    return true;
-  }
+  // const staffIndex = staff.findIndex((s) => s.id === staffId);
+  // if (staffIndex !== -1) {
+  //   staff[staffIndex].password = newPassword;
+  //   // In a real app, you'd log this password change
+  //   return true;
+  // }
   return false;
 };
 
@@ -175,19 +176,19 @@ export const updateStaffRole = (
   newRole: User["role"],
   updatedBy: string
 ): boolean => {
-  const staffIndex = staff.findIndex((s) => s.id === staffId);
-  if (staffIndex !== -1) {
-    const rolePermissions = ROLE_PERMISSIONS.find((rp) => rp.role === newRole);
-    const permissions = rolePermissions
-      ? ALL_PERMISSIONS.filter((p) =>
-          rolePermissions.permissions.includes(p.id)
-        )
-      : [];
+  // const staffIndex = staff.findIndex((s) => s.id === staffId);
+  // if (staffIndex !== -1) {
+  //   const rolePermissions = ROLE_PERMISSIONS.find((rp) => rp.role === newRole);
+  //   const permissions = rolePermissions
+  //     ? ALL_PERMISSIONS.filter((p) =>
+  //         rolePermissions.permissions.includes(p.id)
+  //       )
+  //     : [];
 
-    staff[staffIndex].role = newRole;
-    staff[staffIndex].permissions = permissions;
-    return true;
-  }
+  //   staff[staffIndex].role = newRole;
+  //   staff[staffIndex].permissions = permissions;
+  //   return true;
+  // }
   return false;
 };
 
@@ -195,11 +196,11 @@ export const deactivateStaff = (
   staffId: string,
   deactivatedBy: string
 ): boolean => {
-  const staffIndex = staff.findIndex((s) => s.id === staffId);
-  if (staffIndex !== -1) {
-    staff[staffIndex].isActive = false;
-    return true;
-  }
+  // const staffIndex = staff.findIndex((s) => s.id === staffId);
+  // if (staffIndex !== -1) {
+  //   staff[staffIndex].isActive = false;
+  //   return true;
+  // }
   return false;
 };
 
@@ -207,10 +208,10 @@ export const activateStaff = (
   staffId: string,
   activatedBy: string
 ): boolean => {
-  const staffIndex = staff.findIndex((s) => s.id === staffId);
-  if (staffIndex !== -1) {
-    staff[staffIndex].isActive = true;
-    return true;
-  }
+  // const staffIndex = staff.findIndex((s) => s.id === staffId);
+  // if (staffIndex !== -1) {
+  //   staff[staffIndex].isActive = true;
+  //   return true;
+  // }
   return false;
 };
