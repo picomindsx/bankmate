@@ -192,11 +192,14 @@ export const updateLead = async (
   return true;
 };
 
-export const deleteLead = (leadId: string): boolean => {
-  const leadIndex = leads.findIndex((l) => l.id === leadId);
-  if (leadIndex !== -1) {
-    leads.splice(leadIndex, 1);
-    return true;
+export const deleteLead = async (leadId: string): Promise<Boolean> => {
+  const { error } = await supabase.from("leads").delete().eq("id", leadId);
+
+  if (error) {
+    toast.error("Error deleting lead");
+    console.error(error);
+    return false;
   }
+  toast.success("Lead deleted");
   return false;
 };

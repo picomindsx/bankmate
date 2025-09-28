@@ -28,6 +28,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { getStaff, deleteStaff } from "@/services/staff-service";
 import { User } from "@/types/common";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { se } from "date-fns/locale";
 
 export default function StaffManagementPage() {
   const { user, logout } = useAuth();
@@ -41,11 +53,9 @@ export default function StaffManagementPage() {
   }, [user, router]);
 
   const handleDeleteStaff = async (staffId: string) => {
-    if (confirm("Are you sure you want to delete this staff member?")) {
-      const success = await deleteStaff(staffId);
-      if (success) {
-        getStaff().then((staffList) => setStaff(staffList));
-      }
+    const success = await deleteStaff(staffId);
+    if (success) {
+      getStaff().then((staffList) => setStaff(staffList));
     }
   };
 
@@ -277,14 +287,36 @@ export default function StaffManagementPage() {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteStaff(member.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you sure you want to delete this staff
+                                member?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the staff member's
+                                account, revoke their access to all systems, and
+                                remove any data or files associated only with
+                                their user profile.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteStaff(member.id)}
+                              >
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     ))
                   ) : (

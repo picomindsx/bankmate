@@ -45,6 +45,7 @@ import {
   Plus,
   X,
   Edit,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { getBranches } from "@/services/branch-service";
@@ -55,7 +56,9 @@ import {
 import {
   addNewLead,
   assignLeadToStaff,
+  deleteLead,
   getAssignedLeads,
+  getLeads,
   getStaffAssignedLeads,
   updateLead,
 } from "@/services/lead-service";
@@ -75,6 +78,19 @@ import {
 } from "@/lib/consts";
 import LeadDetailView from "@/components/lead-detail-view";
 import { getStatusColor } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { de } from "date-fns/locale";
 
 interface CustomOption {
   id: string;
@@ -272,6 +288,13 @@ const EmployeeDashboard = () => {
     "student",
     "other",
   ];
+
+  const handleDeleteLead = async (leadId: string) => {
+    const success = await deleteLead(leadId);
+    if (success) {
+      refetchLeads();
+    }
+  };
 
   const handleDocumentCheck = (docId: string, checked: boolean) => {
     setDocumentChecklist((prev) =>
@@ -814,6 +837,45 @@ const EmployeeDashboard = () => {
                                 <FileText className="h-4 w-4 mr-1" />
                                 File Status
                               </Button> */}
+                              {!lead.assignedStaff && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className="bg-red-500 hover:bg-red-600 text-white"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      Delete Lead
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Are you sure you want to delete this
+                                        Lead?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete the Lead's
+                                        account, revoke their access to all
+                                        systems, and remove any data or files
+                                        associated only with their user profile.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleDeleteLead(lead.id)
+                                        }
+                                      >
+                                        Continue
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
                             </div>
                           </div>
                         </CardContent>

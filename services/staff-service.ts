@@ -14,7 +14,7 @@ export const addStaff = async (
   const { data: insertedUser, error: userError } = await supabase
     .from("users")
     .insert({
-      username: staffData.username,
+      username: staffData.phone,
       password: staffData.password, // ⚠️ hash before saving in real use
       name: staffData.name,
       phone: staffData.phone,
