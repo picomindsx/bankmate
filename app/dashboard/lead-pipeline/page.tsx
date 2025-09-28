@@ -670,11 +670,11 @@ export default function LeadPipelinePage() {
               placeholder="Search leads..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+              className="w-64 bg-white/10 border-white/20 placeholder:text-gray-400"
             />
           </div>
           <Select value={branchFilter} onValueChange={setBranchFilter}>
-            <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+            <SelectTrigger className="w-48 bg-white/10 border-white/20">
               <SelectValue placeholder="Filter by branch" />
             </SelectTrigger>
             <SelectContent>
