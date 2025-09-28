@@ -1,5 +1,6 @@
-import { users, staff, ALL_PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/consts";
+import { users, ALL_PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/consts";
 import { supabase } from "@/lib/supabase";
+import { mapDbRow } from "@/lib/utils";
 import { Permission, User } from "@/types/common";
 import { toast } from "sonner";
 
@@ -21,7 +22,7 @@ const getUser = async (username: string): Promise<User | null> => {
     toast.error("User not found");
     return null;
   }
-  return data as User;
+  return mapDbRow<User>(data);
 };
 
 export const authenticateUser = async (
@@ -99,18 +100,17 @@ export const canAccessResource = (
 };
 
 export const getUserStatistics = () => {
-  const activeStaff = staff.filter((s) => s.isActive);
-
-  return {
-    totalUsers: users.length + staff.length,
-    activeStaff: activeStaff.length,
-    inactiveStaff: staff.length - activeStaff.length,
-    owners:
-      users.filter((u) => u.role === "owner").length +
-      activeStaff.filter((s) => s.role === "owner").length,
-    branchHeads: activeStaff.filter((s) => s.role === "branch_head").length,
-    managers: activeStaff.filter((s) => s.role === "manager").length,
-    admins: activeStaff.filter((s) => s.role === "admin").length,
-    staff: activeStaff.filter((s) => s.role === "staff").length,
-  };
+  // const activeStaff = staff.filter((s) => s.isActive);
+  // return {
+  //   totalUsers: users.length + staff.length,
+  //   activeStaff: activeStaff.length,
+  //   inactiveStaff: staff.length - activeStaff.length,
+  //   owners:
+  //     users.filter((u) => u.role === "owner").length +
+  //     activeStaff.filter((s) => s.role === "owner").length,
+  //   branchHeads: activeStaff.filter((s) => s.role === "branch_head").length,
+  //   managers: activeStaff.filter((s) => s.role === "manager").length,
+  //   admins: activeStaff.filter((s) => s.role === "admin").length,
+  //   staff: activeStaff.filter((s) => s.role === "staff").length,
+  // };
 };

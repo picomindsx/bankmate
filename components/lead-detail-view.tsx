@@ -28,10 +28,12 @@ const LeadDetailView = ({
   lead,
   setSelectedLead,
   setLeads,
+  disableEdit = false,
 }: {
   lead: LeadForm;
   setSelectedLead: (lead: LeadForm | null) => void;
   setLeads: (leads: LeadForm[]) => void;
+  disableEdit?: boolean;
 }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
@@ -213,22 +215,24 @@ const LeadDetailView = ({
           </div> */}
         </div>
 
-        <div className="my-3">
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => {
-              setSelectedLead(lead); // Ensure selectedLead is set
-              setEditFormData(lead);
-              setShowEditDialog(true);
-            }}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Lead Details
-          </Button>
-        </div>
+        {!disableEdit && (
+          <div className="my-3">
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                setSelectedLead(lead); // Ensure selectedLead is set
+                setEditFormData(lead);
+                setShowEditDialog(true);
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Lead Details
+            </Button>
+          </div>
+        )}
       </div>
       <EditLeadDialog
-        open={showEditDialog}
+        open={showEditDialog && !disableEdit}
         lead={lead}
         close={() => {
           setShowEditDialog(false);

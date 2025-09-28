@@ -62,6 +62,7 @@ import { getStaff } from "@/services/staff-service";
 import { Branch, Lead, LeadForm } from "@/types/common";
 import { getDocumentCompletionStatus } from "@/services/document-service";
 import LeadDetailView from "@/components/lead-detail-view";
+import { getStatusColor } from "@/lib/utils";
 
 export default function LeadManagementPage() {
   const { user, logout } = useAuth();
@@ -223,21 +224,6 @@ export default function LeadManagementPage() {
       setShowCustomStaffDialog(false);
       // Auto-select the newly added staff
       setSelectedStaffId(customStaffMember.id);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "login":
-        return "bg-blue-500";
-      case "pending":
-        return "bg-orange-500";
-      case "sanctioned":
-        return "bg-green-500";
-      case "rejected":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
     }
   };
 
