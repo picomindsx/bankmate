@@ -27,10 +27,12 @@ const AssignReassign = ({
   lead,
   open,
   setOpen,
+  setLead,
 }: {
   lead: LeadForm | null;
   open: boolean;
   setOpen: (open: boolean) => void;
+  setLead: (lead: LeadForm) => void;
 }) => {
   const [staff, setStaff] = useState<User[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string>();
@@ -43,6 +45,11 @@ const AssignReassign = ({
       bankSelection: selectedBank,
     }).finally(() => {
       setOpen(false);
+      setLead({
+        ...lead,
+        assignedStaff: selectedStaff,
+        bankSelection: selectedBank,
+      });
     });
   };
 
@@ -50,6 +57,7 @@ const AssignReassign = ({
     getStaff().then((staffList) => setStaff(staffList));
     if (lead) {
       setSelectedStaff(lead?.assignedStaff);
+      setSelectedBank(lead?.bankSelection);
     }
   }, []);
 

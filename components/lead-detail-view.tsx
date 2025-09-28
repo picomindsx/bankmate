@@ -25,21 +25,6 @@ import { getAllLeads } from "@/services/lead-service";
 import EditLeadDialog from "./edit-lead-dialog";
 import { LeadFormDetailsConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@radix-ui/react-select";
-import { Select } from "react-day-picker";
 import AssignReassign from "./assign-reassign";
 
 const LeadDetailView = ({
@@ -236,6 +221,7 @@ const LeadDetailView = ({
         lead={lead}
         open={showAssignDialog}
         setOpen={setShowAssignDialog}
+        setLead={setSelectedLead}
       />
     </div>
   );
