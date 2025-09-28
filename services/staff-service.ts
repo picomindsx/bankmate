@@ -110,7 +110,7 @@ export const updateStaff = async (
   const { data: updatedUser, error: userError } = await supabase
     .from("users")
     .update({
-      username: updates.username,
+      username: updates.phone,
       password: updates.password, // ⚠️ hash before saving in real use
       name: updates.name,
       phone: updates.phone,
