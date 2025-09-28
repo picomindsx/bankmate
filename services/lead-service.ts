@@ -1,4 +1,4 @@
-import { leads, staff } from "@/lib/consts";
+import { leads } from "@/lib/consts";
 import { supabase } from "@/lib/supabase";
 import { mapDbList, mapFormRow } from "@/lib/utils";
 import { Lead, LeadForm, User } from "@/types/common";
@@ -34,32 +34,32 @@ export const assignLeadToStaff = (
   selectedBank?: string
 ): boolean => {
   // Only Owner, Manager, and Branch Head can assign leads
-  if (!["owner", "manager", "branch_head"].includes(assignedBy.role)) {
-    return false;
-  }
+  // if (!["owner", "manager", "branch_head"].includes(assignedBy.role)) {
+  //   return false;
+  // }
 
-  const lead = leads.find((l) => l.id === leadId);
-  const staffMember = staff.find((s) => s.id === staffId && s.isActive);
+  // const lead = leads.find((l) => l.id === leadId);
+  // const staffMember = staff.find((s) => s.id === staffId && s.isActive);
 
-  if (lead && staffMember) {
-    lead.assignedStaff = staffMember.name;
-    lead.ownerManagerAssignment = `${assignedBy.name} (${assignedBy.role})`;
-    lead.isVisibleToStaff = true; // Make lead visible to staff after assignment
-    lead.assignmentStatus = "assigned";
-    lead.assignedAt = new Date().toISOString();
+  // if (lead && staffMember) {
+  //   lead.assignedStaff = staffMember.name;
+  //   lead.ownerManagerAssignment = `${assignedBy.name} (${assignedBy.role})`;
+  //   lead.isVisibleToStaff = true; // Make lead visible to staff after assignment
+  //   lead.assignmentStatus = "assigned";
+  //   lead.assignedAt = new Date().toISOString();
 
-    if (selectedBank) {
-      lead.selectedBank = selectedBank;
-      lead.bankAssignedAt = new Date().toISOString();
-    }
+  //   if (selectedBank) {
+  //     lead.selectedBank = selectedBank;
+  //     lead.bankAssignedAt = new Date().toISOString();
+  //   }
 
-    lead.updatedAt = new Date().toISOString();
+  //   lead.updatedAt = new Date().toISOString();
 
-    console.log(
-      `[v0] Lead ${leadId} assigned to ${staffMember.name} by ${assignedBy.name}`
-    );
-    return true;
-  }
+  //   console.log(
+  //     `[v0] Lead ${leadId} assigned to ${staffMember.name} by ${assignedBy.name}`
+  //   );
+  //   return true;
+  // }
   return false;
 };
 
@@ -74,7 +74,7 @@ export const getStaffAssignedLeads = async (
     .from("leads")
     .select("*")
     // .eq("created_by", staffId)
-    .or(`created_by.eq.${staffId},assignment_status.eq.${staffId})`);
+    .or(`created_by.eq.${staffId},assigned_staff.eq.${staffId})`);
 
   if (error) {
     console.error("Error fetching leads from Supabase:", error);
@@ -127,20 +127,21 @@ export const getAllLeads = async (): Promise<LeadForm[]> => {
 };
 
 export const getAssignedLeads = (staffId: string): Lead[] => {
-  const staffMember = staff.find((s) => s.id === staffId);
-  if (!staffMember) return [];
+  // const staffMember = staff.find((s) => s.id === staffId);
+  // if (!staffMember) return [];
 
-  // Staff can see:
-  // 1. Leads they personally created (even if not assigned back to them yet)
-  // 2. Leads assigned to them by Owner/Manager/Branch Head
-  // 3. Leads assigned from external sources
-  return leads.filter(
-    (lead) =>
-      (lead.createdBy === staffMember.name && lead.createdByStaff === true) || // Their own created leads
-      (lead.assignedStaff === staffMember.name &&
-        lead.isVisibleToStaff === true &&
-        lead.assignmentStatus === "assigned") // Assigned leads
-  );
+  // // Staff can see:
+  // // 1. Leads they personally created (even if not assigned back to them yet)
+  // // 2. Leads assigned to them by Owner/Manager/Branch Head
+  // // 3. Leads assigned from external sources
+  // return leads.filter(
+  //   (lead) =>
+  //     (lead.createdBy === staffMember.name && lead.createdByStaff === true) || // Their own created leads
+  //     (lead.assignedStaff === staffMember.name &&
+  //       lead.isVisibleToStaff === true &&
+  //       lead.assignmentStatus === "assigned") // Assigned leads
+  // );
+  return [];
 };
 
 export const getStaffCreatedLeads = (): Lead[] => {
@@ -168,9 +169,13 @@ export const updateLead = async (
   leadId: string,
   updates: Partial<LeadForm>
 ): Promise<Boolean> => {
+  const newUpdates = { ...updates };
+  delete newUpdates.assignedStaffName;
+  delete newUpdates.ownerManagerAssignmentName;
+
   const { data, error } = await supabase
     .from("leads")
-    .update(mapFormRow(updates))
+    .update(mapFormRow(newUpdates))
     .eq("id", leadId)
     .select()
     .single();

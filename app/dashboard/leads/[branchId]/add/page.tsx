@@ -24,7 +24,13 @@ import { getBranches } from "@/services/branch-service";
 import { addNewLead } from "@/services/lead-service";
 import { getAllStaff, getStaff } from "@/services/staff-service";
 import { Branch, LeadForm, User } from "@/types/common";
-import { emptyLeadForm } from "@/lib/consts";
+import {
+  APPLICATION_STATUS,
+  BANKS,
+  emptyLeadForm,
+  LEAD_SOURCES,
+} from "@/lib/consts";
+import { getStatusColor } from "@/lib/utils";
 
 export default function AddLeadPage() {
   const { user, logout } = useAuth();
@@ -41,17 +47,6 @@ export default function AddLeadPage() {
   const [branch, setBranch] = useState<Branch>();
   const [staff, setStaff] = useState<User[]>([]);
 
-  const banks = [
-    "State Bank of India (SBI)",
-    "HDFC Bank",
-    "ICICI Bank",
-    "Canara Bank",
-    "Punjab National Bank",
-    "Bank of Baroda",
-    "Axis Bank",
-    "Kotak Mahindra Bank",
-  ];
-
   const productTypes = [
     "Home Loan",
     "Personal Loan",
@@ -62,33 +57,6 @@ export default function AddLeadPage() {
     "Insurance",
     "Investment Products",
   ];
-
-  const leadSources = [
-    "Social Media",
-    "Facebook",
-    "Instagram",
-    "Google Ads",
-    "Walk-in",
-    "Referral",
-    "Website",
-    "Cold Call",
-    "Email Campaign",
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Login":
-        return "bg-blue-500";
-      case "Pending":
-        return "bg-orange-500";
-      case "Sanctioned":
-        return "bg-green-500";
-      case "Rejected":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,7 +210,7 @@ export default function AddLeadPage() {
                     required
                   >
                     <option value="">Select lead source</option>
-                    {leadSources.map((source) => (
+                    {LEAD_SOURCES.map((source) => (
                       <option key={source} value={source}>
                         {source}
                       </option>
@@ -471,7 +439,7 @@ export default function AddLeadPage() {
                     className="w-full px-3 py-2 border rounded-md bg-background"
                   >
                     <option value="">Select bank</option>
-                    {banks.map((bank) => (
+                    {BANKS.map((bank) => (
                       <option key={bank} value={bank}>
                         {bank}
                       </option>
@@ -522,30 +490,28 @@ export default function AddLeadPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {["Login", "Pending", "Sanctioned", "Rejected"].map(
-                  (status) => (
-                    <div
-                      key={status}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        formData.applicationStatus === status
-                          ? "border-primary bg-primary/10"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                      onClick={() =>
-                        handleInputChange("applicationStatus", status as any)
-                      }
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-3 h-3 rounded-full ${getStatusColor(
-                            status
-                          )}`}
-                        ></div>
-                        <span className="font-medium">{status}</span>
-                      </div>
+                {APPLICATION_STATUS.map((status) => (
+                  <div
+                    key={status}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      formData.applicationStatus === status
+                        ? "border-primary bg-primary/10"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() =>
+                      handleInputChange("applicationStatus", status)
+                    }
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${getStatusColor(
+                          status
+                        )}`}
+                      ></div>
+                      <span className="font-medium">{status}</span>
                     </div>
-                  )
-                )}
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2">

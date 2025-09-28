@@ -74,6 +74,7 @@ import {
   INCOME_CATEGORY,
   LOAN_TYPES,
 } from "@/lib/consts";
+import LeadDetailView from "@/components/lead-detail-view";
 
 interface CustomOption {
   id: string;
@@ -176,6 +177,8 @@ const EmployeeDashboard = () => {
     const lead: LeadForm = {
       ...(newLead as LeadForm),
       createdAt: new Date().toISOString(),
+      createdBy: user!.id,
+      branchId: user!.branchId,
       // documents: {
       //   "PAN Card": false,
       //   "Aadhar Card": false,
@@ -815,7 +818,7 @@ const EmployeeDashboard = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
-                              <Button
+                              {/* <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
@@ -825,47 +828,7 @@ const EmployeeDashboard = () => {
                               >
                                 <FileText className="h-4 w-4 mr-1" />
                                 File Status
-                              </Button>
-
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedLead(lead);
-                                  // Open edit dialog (you can implement this similar to the main dashboard)
-                                  // For now, we'll just log it. A full implementation would involve a modal.
-                                  console.log("Editing lead:", lead.id);
-                                  // Example: setShowEditLeadDialog(true);
-                                }}
-                                className="bg-green-500 hover:bg-green-600 text-white"
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Edit Lead
-                              </Button>
-
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  // Open document management dialog
-                                  setSelectedLead(lead);
-                                  setShowDocumentDialog(true);
-                                }}
-                                className="bg-purple-500 hover:bg-purple-600 text-white"
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Manage Docs
-                              </Button>
-
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedLead(lead);
-                                  setShowAssignDialog(true);
-                                }}
-                                className="bg-orange-500 hover:bg-orange-600 text-white"
-                              >
-                                <Users className="h-4 w-4 mr-1" />
-                                Assign/Reassign
-                              </Button>
+                              </Button> */}
                             </div>
                           </div>
                         </CardContent>
@@ -1487,9 +1450,13 @@ const EmployeeDashboard = () => {
                   <Input
                     value={newLead.loanTenure}
                     onChange={(e) =>
-                      setNewLead({ ...newLead, loanTenure: e.target.value })
+                      setNewLead({
+                        ...newLead,
+                        loanTenure: parseFloat(e.target.value),
+                      })
                     }
                     placeholder="Enter loan tenure in months"
+                    type="number"
                   />
                 </div>
                 {/* TODO: <div className="space-y-2">
@@ -1521,7 +1488,10 @@ const EmployeeDashboard = () => {
                   <Select
                     value={newLead.urgencyLevel}
                     onValueChange={(value) =>
-                      setNewLead({ ...newLead, urgencyLevel: value })
+                      setNewLead({
+                        ...newLead,
+                        urgencyLevel: value as IUrgencyLevel,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -1650,180 +1620,15 @@ const EmployeeDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* <Dialog
-        open={showCustomOptionDialog}
-        onOpenChange={setShowCustomOptionDialog}
-      >
-        <DialogContent className="bg-gray-900 border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Add Custom{" "}
-              {customOptionType === "bank"
-                ? "Bank"
-                : customOptionType === "loanType"
-                ? "Loan Type"
-                : "Income Category"}
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Add a new option that's not in the standard list
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="customOption" className="text-white">
-                {customOptionType === "bank"
-                  ? "Bank Name"
-                  : customOptionType === "loanType"
-                  ? "Loan Type"
-                  : "Income Category"}
-              </Label>
-              <Input
-                id="customOption"
-                value={newCustomOption}
-                onChange={(e) => setNewCustomOption(e.target.value)}
-                placeholder={
-                  customOptionType === "bank"
-                    ? "e.g., Local Cooperative Bank"
-                    : customOptionType === "loanType"
-                    ? "e.g., Agricultural Loan"
-                    : "e.g., Freelancer"
-                }
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleAddCustomOption}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                disabled={!newCustomOption.trim()}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Option
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowCustomOptionDialog(false);
-                  setNewCustomOption("");
-                  setCustomOptionType(null);
-                }}
-                variant="outline"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog> */}
-
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent className="bg-white max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Assign/Reassign Lead</DialogTitle>
-            <DialogDescription>
-              Assign this lead to a staff member and select a bank for
-              processing.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Select Staff Member</Label>
-              <Select
-                value={selectedStaffId}
-                onValueChange={setSelectedStaffId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-                    getStaff().then((staffList) =>
-                      staffList
-                        .filter((s) => s.isActive)
-                        .map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name} - {member.designation}
-                          </SelectItem>
-                        ))
-                    ) // Fetch latest staff list
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Select Bank</Label>
-              <Select value={selectedBank} onValueChange={setSelectedBank}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="State Bank of India">
-                    State Bank of India
-                  </SelectItem>
-                  <SelectItem value="HDFC Bank">HDFC Bank</SelectItem>
-                  <SelectItem value="ICICI Bank">ICICI Bank</SelectItem>
-                  <SelectItem value="Axis Bank">Axis Bank</SelectItem>
-                  <SelectItem value="Kotak Mahindra Bank">
-                    Kotak Mahindra Bank
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  if (selectedLead && selectedStaffId) {
-                    const success = handleAssignLead(
-                      selectedLead.id!,
-                      selectedStaffId,
-                      selectedBank
-                    );
-                    if (success) {
-                      setShowAssignDialog(false);
-                      setSelectedStaffId("");
-                      setSelectedBank("");
-                      setSelectedLead(null);
-                    }
-                  }
-                }}
-                className="flex-1"
-                disabled={!selectedStaffId}
-              >
-                Assign Lead
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAssignDialog(false);
-                  setSelectedStaffId("");
-                  setSelectedBank("");
-                }}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Lead Detail Modal */}
-      {selectedLead && <LeadDetailModal lead={selectedLead} />}
-
-      {/* {selectedLead && showFileTracker && (
-        <FileStatusTracker
+      {selectedLead && (
+        <LeadDetailView
           lead={selectedLead}
-          onClose={() => setShowFileTracker(false)}
-          onUpdate={(leadId, updates) => {
-            // Update the lead in the system
-            updateLead(leadId, updates);
-            // Refresh the leads list
-            refetchLeads();
-          }}
+          setLeads={() => {}}
+          setSelectedLead={setSelectedLead}
+          disableEdit
         />
-      )} */}
+      )}
     </div>
   );
 };

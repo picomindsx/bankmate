@@ -8,6 +8,7 @@ import {
   LeadForm,
   IGender,
   IIncomeCategory,
+  IApplicationStatus,
 } from "@/types/common";
 
 export const ALL_PERMISSIONS: Permission[] = [
@@ -463,10 +464,6 @@ export const branches: Branch[] = [
   },
 ];
 
-export const staff: User[] = [
-  // All current staff removed - empty array for fresh start
-];
-
 export const leads: Lead[] = [
   // Leads data will be stored here
 ];
@@ -622,4 +619,34 @@ export const INCOME_CATEGORY: IIncomeCategory[] = [
   "Business Owner",
   "NRI",
   "Retired",
+];
+
+export const LEAD_SOURCES = [
+  "Social Media",
+  "Facebook",
+  "Instagram",
+  "Google Ads",
+  "Walk-in",
+  "Referral",
+  "Website",
+  "Cold Call",
+  "Email Campaign",
+];
+
+export const BANKS = [
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Canara Bank",
+  "Punjab National Bank",
+  "Bank of Baroda",
+  "Axis Bank",
+  "Kotak Mahindra Bank",
+];
+
+export const APPLICATION_STATUS: IApplicationStatus[] = [
+  "login",
+  "pending",
+  "sanctioned",
+  "rejected",
 ];

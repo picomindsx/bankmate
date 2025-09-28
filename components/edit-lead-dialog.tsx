@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { updateLead } from "@/services/lead-service";
-import { IGender, IUrgencyLevel, LeadForm } from "@/types/common";
+import { IGender, IUrgencyLevel, LeadForm, User } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -12,8 +12,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { GENDER_OPTIONS, INCOME_CATEGORY, LOAN_TYPES } from "@/lib/consts";
+import {
+  APPLICATION_STATUS,
+  BANKS,
+  GENDER_OPTIONS,
+  INCOME_CATEGORY,
+  LEAD_SOURCES,
+  LOAN_TYPES,
+} from "@/lib/consts";
 import { Textarea } from "./ui/textarea";
+import { getAllStaff } from "@/services/staff-service";
+import { Calendar, TrendingUp } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "./ui/card";
+import { getStatusColor } from "@/lib/utils";
 
 const EditLeadDialog = ({
   lead,
@@ -29,6 +46,8 @@ const EditLeadDialog = ({
   const { user } = useAuth();
 
   const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
+
+  const [staff, setStaff] = useState<User[]>([]);
 
   const handleEditLead = async () => {
     if (!lead || !user) return;
@@ -75,12 +94,126 @@ const EditLeadDialog = ({
     setEditFormData(lead || {});
   }, [lead]);
 
+  useEffect(() => {
+    // getBranches().then((branches) => {
+    //   const currentBranch: Branch | undefined = branches.find(
+    //     (b) => b.id === branchId
+    //   );
+    //   setBranch(currentBranch);
+    // });
+    getAllStaff().then((staffList) => setStaff(staffList));
+  }, []);
+
   return (
     <>
       {open && lead && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Edit Lead Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-3">
+              <div className="space-y-2">
+                <Label htmlFor="leadName">Lead Name *</Label>
+                <Input
+                  id="leadName"
+                  type="text"
+                  placeholder="Enter lead name/reference"
+                  value={editFormData.leadName}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      leadName: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leadSource">Source *</Label>
+
+                <select
+                  id="leadSource"
+                  value={editFormData.leadSource}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      leadSource: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  required
+                >
+                  <option value="">Select lead source</option>
+                  {LEAD_SOURCES.map((source) => (
+                    <option key={source} value={source}>
+                      {source}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="assignedStaff">Assigned Staff</Label>
+
+                <select
+                  id="assignedStaff"
+                  value={editFormData.assignedStaff}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      assignedStaff: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                >
+                  <option value="">Select staff member</option>
+                  {staff
+                    .filter(
+                      (member) =>
+                        member.type === "employee" && member.role === "staff"
+                    )
+                    .map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} - {member.designation}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ownerManagerAssignment">
+                  Owner/Manager Assignment
+                </Label>
+
+                <select
+                  id="ownerManagerAssignment"
+                  value={editFormData.ownerManagerAssignment}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      ownerManagerAssignment: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                >
+                  <option value="">Select owner/manager</option>
+                  {staff
+                    .filter(
+                      (member) =>
+                        member.type === "official" &&
+                        ["owner", "manager", "branch_head"].includes(
+                          member.role
+                        )
+                    )
+                    .map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} - {member.designation}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -165,6 +298,24 @@ const EditLeadDialog = ({
                     </Select>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cibilScore">CIBIL Score</Label>
+                <Input
+                  id="cibilScore"
+                  type="number"
+                  placeholder="Enter CIBIL score"
+                  value={editFormData.cibilScore}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      cibilScore: parseInt(e.target.value),
+                    })
+                  }
+                  min="300"
+                  max="900"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -618,7 +769,7 @@ const EditLeadDialog = ({
                       Urgency Level
                     </Label>
                     <Select
-                      value={editFormData.urgencyLevel}
+                      value={editFormData.urgencyLevel || ""}
                       onValueChange={(value) =>
                         setEditFormData({
                           ...editFormData,
@@ -686,6 +837,173 @@ const EditLeadDialog = ({
                 />
               </div>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Bank & Branch Assignment
+                </CardTitle>
+                <CardDescription>
+                  Assign to specific bank and upload bank-specific documents
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="selectedBank">Bank Selection</Label>
+
+                    <select
+                      id="selectedBank"
+                      value={editFormData.bankSelection}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          bankSelection: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border rounded-md bg-background"
+                    >
+                      <option value="">Select bank</option>
+                      {BANKS.map((bank) => (
+                        <option key={bank} value={bank}>
+                          {bank}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankBranch">Bank Branch</Label>
+                    <Input
+                      id="bankBranch"
+                      type="text"
+                      placeholder="Enter bank branch name"
+                      value={editFormData.bankBranch}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          bankBranch: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankStaff">Bank Staff Member</Label>
+                    <Input
+                      id="bankStaff"
+                      type="text"
+                      placeholder="Enter bank staff contact person"
+                      value={editFormData.bankStaffMember}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          bankStaffMember: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Application Status Flow
+                </CardTitle>
+                <CardDescription>
+                  Set initial application status with color coding
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {APPLICATION_STATUS.map((status) => (
+                    <div
+                      key={status}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        editFormData.applicationStatus === status
+                          ? "border-primary bg-primary/10"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() =>
+                        setEditFormData({
+                          ...editFormData,
+                          applicationStatus: status,
+                        })
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getStatusColor(
+                            status
+                          )}`}
+                        ></div>
+                        <span className="font-medium">{status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="remarks">Status Remarks/Notes</Label>
+                  <Textarea
+                    id="remarks"
+                    placeholder="Add remarks about the current status..."
+                    value={editFormData.statusRemarks}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        statusRemarks: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Additional Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cost">Estimated Cost</Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    placeholder="Enter estimated cost"
+                    value={editFormData.estimatedCost}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        estimatedCost: parseFloat(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="additionalInfo">Additional Information</Label>
+                  <Textarea
+                    id="additionalInfo"
+                    placeholder="Enter any additional information about the lead"
+                    value={editFormData.additionalInformation}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        additionalInformation: e.target.value,
+                      })
+                    }
+                    rows={4}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="flex gap-3 mt-6">
               <Button
