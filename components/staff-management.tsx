@@ -53,6 +53,18 @@ import {
   deleteStaff,
 } from "@/services/staff-service";
 import { User as UserType } from "@/types/common";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
+import { toast } from "sonner";
 
 interface StaffManagementProps {
   currentUser: UserType;
@@ -94,6 +106,17 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
 
   const handleAddStaff = () => {
     if (!hasPermission(currentUser, "staff.create")) return;
+
+    if (
+      !newStaff.name ||
+      !newStaff.phone ||
+      !newStaff.email ||
+      !newStaff.role ||
+      !newStaff.branchId
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
 
     const staffMember = addStaff(newStaff);
     getStaff().then((staffList) => setStaff(staffList));
@@ -313,6 +336,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <div>
                       <Label htmlFor="name" className="text-white">
                         Full Name
+                        <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Input
                         id="name"
@@ -326,6 +350,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <div>
                       <Label htmlFor="phone" className="text-white">
                         Phone Number
+                        <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Input
                         id="phone"
@@ -339,6 +364,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <div>
                       <Label htmlFor="email" className="text-white">
                         Email
+                        <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Input
                         id="email"
@@ -353,6 +379,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <div>
                       <Label htmlFor="role" className="text-white">
                         Role
+                        <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Select
                         value={newStaff.role}
@@ -376,6 +403,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <div>
                       <Label htmlFor="branch" className="text-white">
                         Branch
+                        <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Select
                         value={newStaff.branchId}
@@ -580,14 +608,38 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     </Button>
                   )}
                   {canDeleteStaff && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteStaff(member.id)}
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you sure you want to delete this staff member?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the staff member's
+                            account, revoke their access to all systems, and
+                            remove any data or files associated only with their
+                            user profile.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteStaff(member.id)}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </div>
               </div>
