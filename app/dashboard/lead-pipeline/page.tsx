@@ -41,6 +41,9 @@ import {
   Search,
   Download,
   Clock,
+  Delete,
+  Trash,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -68,10 +71,23 @@ import {
   assignLeadToStaff,
   getAllLeads,
   getBranchLeads,
+  deleteLead,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
 import { Lead, Branch, LeadForm } from "@/types/common";
 import LeadDetailView from "@/components/lead-detail-view";
+import AssignReassign from "@/components/assign-reassign";
+import {
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 // Sortable Lead Card Component
 function SortableLeadCard({
@@ -80,11 +96,13 @@ function SortableLeadCard({
   onAssign,
   onFileTracker,
   user,
+  setLeads,
 }: {
   lead: LeadForm;
   onView: (lead: LeadForm) => void;
   onAssign: (lead: LeadForm) => void;
   onFileTracker: (lead: LeadForm) => void;
+  setLeads: (leads: LeadForm[]) => void;
   user: any;
 }) {
   const {
@@ -100,6 +118,13 @@ function SortableLeadCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleDeleteLead = async (leadId: string) => {
+    const success = await deleteLead(leadId);
+    if (success) {
+      getAllLeads().then((leadList) => setLeads(leadList));
+    }
   };
 
   const getDocumentCompletionStatus = (lead: Lead) => {
@@ -198,19 +223,6 @@ function SortableLeadCard({
               <Eye className="h-3 w-3 mr-1" />
               View
             </Button>
-            {/* {lead.bankSelection && lead.assignedStaff && (
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFileTracker(lead);
-                }}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs px-2 py-1 h-6"
-              >
-                <FileText className="h-3 w-3 mr-1" />
-                File
-              </Button>
-            )} */}
             {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
               !lead.assignedStaff && (
                 <Button
@@ -225,6 +237,39 @@ function SortableLeadCard({
                   Assign
                 </Button>
               )}
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={"destructive"}
+                  className="text-xs px-2 py-1 h-6"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you sure you want to delete this Lead?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the Lead's account, revoke
+                    their access to all systems, and remove any data or files
+                    associated only with their user profile.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDeleteLead(lead.id || "")}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </CardContent>
@@ -243,10 +288,12 @@ function DroppableColumn({
   onAssign,
   onFileTracker,
   user,
+  setLeads,
 }: {
   id: string;
   title: string;
   leads: LeadForm[];
+  setLeads: (leads: LeadForm[]) => void;
   color: string;
   icon: any;
   onView: (lead: LeadForm) => void;
@@ -282,6 +329,7 @@ function DroppableColumn({
                 onAssign={onAssign}
                 onFileTracker={onFileTracker}
                 user={user}
+                setLeads={setLeads}
               />
             ))}
             {leads.length === 0 && (
@@ -733,6 +781,7 @@ export default function LeadPipelinePage() {
               id="new"
               title="New Leads"
               leads={newLeads}
+              setLeads={setLeads}
               color="from-blue-600 to-cyan-600"
               icon={Plus}
               onView={setSelectedLead}
@@ -751,6 +800,7 @@ export default function LeadPipelinePage() {
               id="assigned"
               title="Assigned Leads"
               leads={assignedLeads}
+              setLeads={setLeads}
               color="from-green-600 to-emerald-600"
               icon={UserPlus}
               onView={setSelectedLead}
@@ -783,109 +833,12 @@ export default function LeadPipelinePage() {
       </div>
 
       {/* Dialogs */}
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Assign Lead to Staff & Select Bank
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Assign {selectedLead?.clientName} to a staff member and select a
-              bank.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="staff" className="text-white">
-                  Select Staff Member
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCustomStaffDialog(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Custom Staff
-                </Button>
-              </div>
-              <Select
-                value={selectedStaffId}
-                onValueChange={setSelectedStaffId}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Choose staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {staff.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.name} - {member.designation}
-                      {member.isCustom && (
-                        <Badge className="ml-2 bg-blue-500 text-white">
-                          Custom
-                        </Badge>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="bank" className="text-white">
-                  Select Bank
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCustomBankDialog(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white border-green-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Custom Bank
-                </Button>
-              </div>
-              <Select
-                value={bankSelection}
-                onValueChange={(value) => {
-                  if (value === "Add Custom Bank...") {
-                    setShowCustomBankDialog(true);
-                  } else {
-                    setSelectedBank(value);
-                  }
-                }}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Choose bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allBanks.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
-                      {customBanks.includes(bank) && (
-                        <Badge className="ml-2 bg-green-500 text-white">
-                          Custom
-                        </Badge>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              onClick={handleAssignLead}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-              disabled={!selectedStaffId || !bankSelection}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Assign Lead & Make Visible to Staff
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AssignReassign
+        lead={selectedLead}
+        setLead={setSelectedLead}
+        open={showAssignDialog}
+        setOpen={setShowAssignDialog}
+      />
 
       <Dialog
         open={showCustomBankDialog}
@@ -1068,7 +1021,11 @@ export default function LeadPipelinePage() {
 
       {/* Modals */}
       {selectedLead && !showFileTracker && (
-        <LeadDetailView lead={selectedLead} setSelectedLead={setSelectedLead} />
+        <LeadDetailView
+          lead={selectedLead}
+          setSelectedLead={setSelectedLead}
+          setLeads={() => {}}
+        />
       )}
     </div>
   );

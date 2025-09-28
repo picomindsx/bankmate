@@ -10,10 +10,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const user = reAuthenticate();
 
-    console.log(user);
-
     if (!user) {
-      console.log("[v0] No user found, redirecting to login");
       router.push("/");
       return;
     }

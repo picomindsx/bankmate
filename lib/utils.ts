@@ -31,7 +31,7 @@ export function mapDbRow<T = any>(dbRow: Record<string, any>): T {
 export function mapFormRow<T = any>(formRow: Record<string, any>): T {
   const mapped: any = {};
   for (const [key, value] of Object.entries(formRow)) {
-    mapped[camelToSnake(key)] = value;
+    mapped[camelToSnake(key)] = value || null;
   }
   return mapped as T;
 }

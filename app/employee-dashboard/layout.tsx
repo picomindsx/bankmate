@@ -11,13 +11,11 @@ const layout = ({ children }: { children: React.ReactNode }) => {
     const user = reAuthenticate();
 
     if (!user) {
-      console.log("[v0] No user found, redirecting to login");
       router.push("/");
       return;
     }
 
     if (user.type !== "employee") {
-      console.log("[v0] User is not employee, redirecting to main dashboard");
       router.push("/dashboard");
       return;
     }

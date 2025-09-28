@@ -107,8 +107,6 @@ export const updateStaff = async (
   staffId: string,
   updates: Partial<User>
 ): Promise<Boolean> => {
-  console.log(staffId, updates);
-
   const { data: updatedUser, error: userError } = await supabase
     .from("users")
     .update({
@@ -157,39 +155,42 @@ export const deleteStaff = async (staffId: string): Promise<Boolean> => {
   return true;
 };
 
-export const updateStaffPassword = (
+export const updateStaffPassword = async (
   staffId: string,
   newPassword: string,
   updatedBy: string
-): boolean => {
-  // const staffIndex = staff.findIndex((s) => s.id === staffId);
-  // if (staffIndex !== -1) {
-  //   staff[staffIndex].password = newPassword;
-  //   // In a real app, you'd log this password change
-  //   return true;
-  // }
-  return false;
+): Promise<Boolean> => {
+  const updated = await supabase
+    .from("users")
+    .update({ password: newPassword })
+    .eq("id", staffId);
+
+  if (updated.error) {
+    console.error("Error updating password:", updated.error);
+    return false;
+  }
+
+  toast.success("Password updated successfully");
+  return true;
 };
 
-export const updateStaffRole = (
+export const updateStaffRole = async (
   staffId: string,
   newRole: User["role"],
   updatedBy: string
-): boolean => {
-  // const staffIndex = staff.findIndex((s) => s.id === staffId);
-  // if (staffIndex !== -1) {
-  //   const rolePermissions = ROLE_PERMISSIONS.find((rp) => rp.role === newRole);
-  //   const permissions = rolePermissions
-  //     ? ALL_PERMISSIONS.filter((p) =>
-  //         rolePermissions.permissions.includes(p.id)
-  //       )
-  //     : [];
+): Promise<Boolean> => {
+  const updated = await supabase
+    .from("users")
+    .update({ role: newRole })
+    .eq("id", staffId);
 
-  //   staff[staffIndex].role = newRole;
-  //   staff[staffIndex].permissions = permissions;
-  //   return true;
-  // }
-  return false;
+  if (updated.error) {
+    console.error("Error updating role:", updated.error);
+    return false;
+  }
+
+  toast.success("Role updated successfully");
+  return true;
 };
 
 export const deactivateStaff = (

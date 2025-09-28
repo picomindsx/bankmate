@@ -11,7 +11,13 @@ export const addNewLead = async (
 
   const { data, error } = await supabase
     .from("leads")
-    .insert(mapFormRow({ ...leadData, applicationStatus: "login" } as LeadForm))
+    .insert(
+      mapFormRow({
+        ...leadData,
+        applicationStatus: "login",
+        createdAt: new Date().toISOString(),
+      } as LeadForm)
+    )
     .select()
     .single();
 
@@ -201,5 +207,5 @@ export const deleteLead = async (leadId: string): Promise<Boolean> => {
     return false;
   }
   toast.success("Lead deleted");
-  return false;
+  return true;
 };

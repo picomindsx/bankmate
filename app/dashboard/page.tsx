@@ -588,7 +588,7 @@ export default function DashboardPage() {
                       <div className="text-2xl font-bold text-purple-700">
                         {
                           getFilteredLeads().filter(
-                            (lead) => lead.applicationStatus === "disbursed"
+                            (lead) => lead.applicationStatus === "rejected"
                           ).length
                         }
                       </div>

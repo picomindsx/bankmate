@@ -106,7 +106,7 @@ export default function AddLeadPage() {
     });
     getAllStaff().then((staffList) => setStaff(staffList));
   }, []);
-  console.log(staff);
+
   if (!user || user.type !== "official" || !branch) {
     return <div>Loading...</div>;
   }

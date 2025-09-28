@@ -869,7 +869,7 @@ const EmployeeDashboard = () => {
                                       </AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() =>
-                                          handleDeleteLead(lead.id)
+                                          handleDeleteLead(lead.id || "")
                                         }
                                       >
                                         Continue

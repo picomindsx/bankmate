@@ -51,6 +51,7 @@ import {
   deactivateStaff,
   activateStaff,
   deleteStaff,
+  getAllStaff,
 } from "@/services/staff-service";
 import { User as UserType } from "@/types/common";
 import {
@@ -94,7 +95,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    getStaff().then((staffList) => setStaff(staffList));
+    getAllStaff().then((staffList) => setStaff(staffList));
     getBranches().then((branchList) => setBranches(branchList));
   }, []);
 
@@ -145,20 +146,27 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     setSelectedStaff(null);
   };
 
-  const handlePasswordReset = () => {
+  const handlePasswordReset = async () => {
     if (!selectedStaff || !canResetPasswords) return;
 
-    updateStaffPassword(selectedStaff.id, newPassword, currentUser.name || "");
+    await updateStaffPassword(
+      selectedStaff.id,
+      newPassword,
+      currentUser.name || ""
+    );
     getStaff().then((staffList) => setStaff(staffList));
     setNewPassword("");
     setIsPasswordDialogOpen(false);
     setSelectedStaff(null);
   };
 
-  const handleRoleChange = (staffId: string, newRole: UserType["role"]) => {
+  const handleRoleChange = async (
+    staffId: string,
+    newRole: UserType["role"]
+  ) => {
     if (!hasPermission(currentUser, "staff.permissions")) return;
 
-    updateStaffRole(staffId, newRole, currentUser.name || "");
+    await updateStaffRole(staffId, newRole, currentUser.name || "");
     getStaff().then((staffList) => setStaff(staffList));
   };
 
