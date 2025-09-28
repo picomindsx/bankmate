@@ -124,26 +124,31 @@ function SortableLeadCard({
     if (lead.leadSource === "website")
       return {
         label: "Website",
-        color: "bg-green-500/20 text-green-300 border-green-400/30",
+        color:
+          "bg-green-500/20 text-green-300 border-green-400/30 hover:bg-green-500/30",
       };
     if (lead.leadSource === "social_media")
       return {
         label: "Social Media",
-        color: "bg-purple-500/20 text-purple-300 border-purple-400/30",
+        color:
+          "bg-purple-500/20 text-purple-300 border-purple-400/30 hover:bg-purple-500/30",
       };
     if (lead.leadSource === "walk_in")
       return {
         label: "Walk-in",
-        color: "bg-orange-500/20 text-orange-300 border-orange-400/30",
+        color:
+          "bg-orange-500/20 text-orange-300 border-orange-400/30 hover:bg-orange-500/30",
       };
     if (lead.leadSource === "data_sheet")
       return {
         label: "Data Sheet",
-        color: "bg-yellow-500/20 text-yellow-300 border-yellow-400/30",
+        color:
+          "bg-yellow-500/20 text-yellow-300 border-yellow-400/30 hover:bg-yellow-500/30",
       };
     return {
       label: "Owner/Staff Created",
-      color: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
+      color:
+        "bg-indigo-500/20 text-indigo-300 border-indigo-400/30 hover:bg-indigo-500/30",
     };
   };
 
@@ -155,65 +160,33 @@ function SortableLeadCard({
       style={style}
       {...attributes}
       {...listeners}
-      className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300 cursor-grab active:cursor-grabbing"
+      className="backdrop-blur-xl bg-white/75 border-white/20 hover:bg-white transition-all duration-300 cursor-grab active:cursor-grabbing"
     >
-      <CardContent className="p-4">
-        <div className="space-y-3">
+      <CardContent className="p-3">
+        <div className="space-y-2">
           <div className="flex items-start justify-between">
-            <h4 className="font-semibold text-white text-sm">
+            <h4 className="font-semibold text-black text-sm">
               {lead.leadName || lead.clientName}
             </h4>
             <Badge className={sourceBadge.color}>{sourceBadge.label}</Badge>
           </div>
 
-          <div className="space-y-2 text-xs text-gray-300">
-            <div className="flex items-center gap-2">
-              <Phone className="h-3 w-3" />
-              <span>{lead.contactNumber}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-3 w-3" />
-              <span>{lead.email}</span>
-            </div>
+          <div className=" text-xs text-shadow-black pb-1">
             <div className="flex items-center gap-2">
               <Briefcase className="h-3 w-3" />
               <span>{lead.leadType}</span>
             </div>
-            {lead.assignedStaff && (
-              <div className="flex items-center gap-2">
-                <User className="h-3 w-3" />
-                <span>{lead.assignedStaff}</span>
-              </div>
-            )}
-            {lead.bankSelection && (
-              <div className="flex items-center gap-2">
-                <Building2 className="h-3 w-3" />
-                <span>{lead.bankSelection}</span>
-              </div>
-            )}
           </div>
 
-          <div className="flex flex-wrap gap-1">
-            {lead.assignedStaff ? (
-              <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
-                Visible
-              </Badge>
-            ) : lead.assignedStaff ? (
-              <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30 text-xs">
-                Pending
-              </Badge>
-            ) : (
+          {!lead.assignedStaff && (
+            <div className="flex flex-wrap gap-1 pb-0">
               <Badge className="bg-red-500/20 text-red-300 border-red-400/30 text-xs">
                 Unassigned
               </Badge>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="text-xs text-gray-400">
-            Created: {new Date(lead.createdAt!).toLocaleDateString()}
-          </div>
-
-          <div className="flex gap-1 pt-2">
+          <div className="flex gap-1">
             <Button
               size="sm"
               onClick={(e) => {
@@ -295,7 +268,7 @@ function DroppableColumn({
         </div>
       </div>
 
-      <div className="flex-1 p-4 bg-slate-800/50 rounded-b-lg min-h-[600px] overflow-y-auto">
+      <div className="flex-1 p-4 bg-gray-300 rounded-b-lg min-h-[600px] overflow-y-auto">
         <SortableContext
           items={leads.map((lead) => lead.id!)}
           strategy={verticalListSortingStrategy}
@@ -718,7 +691,7 @@ export default function LeadPipelinePage() {
 
       {/* Stats Cards */}
       <div className="p-6">
-        <div className="grid grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <Card className="backdrop-blur-xl bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-700">
@@ -746,48 +719,6 @@ export default function LeadPipelinePage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-emerald-700">
-                Sanctioned
-              </CardTitle>
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-800">
-                {sanctionedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">
-                Rejected
-              </CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-800">
-                {rejectedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">
-                Unassigned
-              </CardTitle>
-              <Clock className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-800">
-                {unassignedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Kanban Board */}
@@ -797,7 +728,7 @@ export default function LeadPipelinePage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <DroppableColumn
               id="new"
               title="New Leads"
@@ -822,60 +753,6 @@ export default function LeadPipelinePage() {
               leads={assignedLeads}
               color="from-green-600 to-emerald-600"
               icon={UserPlus}
-              onView={setSelectedLead}
-              onAssign={(lead) => {
-                setSelectedLead(lead);
-                setShowAssignDialog(true);
-              }}
-              onFileTracker={(lead) => {
-                setSelectedLead(lead);
-                setShowFileTracker(true);
-              }}
-              user={user}
-            />
-
-            <DroppableColumn
-              id="sanctioned"
-              title="Sanctioned Leads"
-              leads={sanctionedLeads}
-              color="from-emerald-600 to-teal-600"
-              icon={CheckCircle}
-              onView={setSelectedLead}
-              onAssign={(lead) => {
-                setSelectedLead(lead);
-                setShowAssignDialog(true);
-              }}
-              onFileTracker={(lead) => {
-                setSelectedLead(lead);
-                setShowFileTracker(true);
-              }}
-              user={user}
-            />
-
-            <DroppableColumn
-              id="rejected"
-              title="Rejected Leads"
-              leads={rejectedLeads}
-              color="from-red-600 to-pink-600"
-              icon={XCircle}
-              onView={setSelectedLead}
-              onAssign={(lead) => {
-                setSelectedLead(lead);
-                setShowAssignDialog(true);
-              }}
-              onFileTracker={(lead) => {
-                setSelectedLead(lead);
-                setShowFileTracker(true);
-              }}
-              user={user}
-            />
-
-            <DroppableColumn
-              id="unassigned"
-              title="Unassigned Leads"
-              leads={unassignedLeads}
-              color="from-orange-600 to-yellow-600"
-              icon={Clock}
               onView={setSelectedLead}
               onAssign={(lead) => {
                 setSelectedLead(lead);

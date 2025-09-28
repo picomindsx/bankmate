@@ -79,7 +79,6 @@ export default function LeadManagementPage() {
   const [documentFilter, setDocumentFilter] = useState("all");
   const [assignmentFilter, setAssignmentFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<LeadForm | null>(null);
-  const [showPipelineView, setShowPipelineView] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showFileTracker, setShowFileTracker] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState("");
@@ -303,227 +302,125 @@ export default function LeadManagementPage() {
     return timeline;
   };
 
-  const PipelineView = () => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-7xl w-full max-h-[95vh] overflow-y-auto border border-white/20 shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-white">
-            Detailed Pipeline View
-          </h2>
-          <Button
-            onClick={() => setShowPipelineView(false)}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            <XCircle className="h-6 w-6" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {["login", "pending", "sanctioned", "rejected"].map((status) => {
-            const statusLeads = leads.filter(
-              (lead) => lead.applicationStatus === status
-            );
-            const statusConfig = {
-              login: { color: "blue", icon: Clock, label: "Login" },
-              pending: { color: "orange", icon: AlertCircle, label: "Pending" },
-              sanctioned: {
-                color: "green",
-                icon: CheckCircle,
-                label: "Sanctioned",
-              },
-              rejected: { color: "red", icon: XCircle, label: "Rejected" },
-            }[status];
-
-            return (
-              <div key={status} className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <statusConfig.icon
-                    className={`h-5 w-5 text-${statusConfig.color}-400`}
-                  />
-                  <h3 className="text-xl font-semibold text-white">
-                    {statusConfig.label}
-                  </h3>
-                  <Badge
-                    className={`bg-${statusConfig.color}-500/20 text-${statusConfig.color}-300 border-${statusConfig.color}-400/30`}
-                  >
-                    {statusLeads.length}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3 max-h-[70vh] overflow-y-auto">
-                  {statusLeads.map((lead) => (
-                    <Card
-                      key={lead.id}
-                      className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer"
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-white text-sm">
-                            {lead.leadName || lead.clientName}
-                          </h4>
-                          <div className="flex items-center gap-2 text-xs text-gray-300">
-                            <Phone className="h-3 w-3" />
-                            {lead.contactNumber}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-300">
-                            <Briefcase className="h-3 w-3" />
-                            {lead.leadType}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-300">
-                            <User className="h-3 w-3" />
-                            {lead.assignedStaff || "Unassigned"}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-300">
-                            <Building2 className="h-3 w-3" />
-                            {lead.bankSelection || "No Bank"}
-                          </div>
-
-                          <div className="text-xs text-gray-400">
-                            Created:{" "}
-                            {new Date(lead.createdAt!).toLocaleDateString()}
-                          </div>
-                          {lead.statusUpdatedAt && (
-                            <div className="text-xs text-gray-400">
-                              Updated:{" "}
-                              {new Date(
-                                lead.statusUpdatedAt
-                              ).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-
-  const LeadCard = ({ lead }: { lead: LeadForm }) => (
-    <Card className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-white">{lead.clientName}</h3>
-              <Badge
-                className={`${getStatusColor(
-                  lead.applicationStatus!
-                )} text-white border-0`}
-              >
-                {lead.applicationStatus}
-              </Badge>
-              {/* {lead.assignedStaff && lead.isVisibleToStaff ? (
-                <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
-                  Assigned & Visible
-                </Badge>
-              ) : lead.assignedStaff && !lead.isVisibleToStaff ? (
-                <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30">
-                  Assigned (Pending)
-                </Badge>
-              ) : (
-                <Badge className="bg-red-500/20 text-red-300 border-red-400/30">
-                  Unassigned
-                </Badge>
-              )} */}
-              {/* {lead.createdByStaff && (
-                <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
-                  Staff Created
-                </Badge>
-              )} */}
-            </div>
-            <div className="space-y-1 text-sm text-gray-300">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <span>{lead.contactNumber}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span>{lead.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4" />
-                <span>{lead.leadType}</span>
-              </div>
-              {lead.bankSelection && (
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4" />
-                  <span>{lead.bankSelection}</span>
-                </div>
-              )}
-              {lead.assignedStaff && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>Assigned to: {lead.assignedStaffName}</span>
-                </div>
-              )}
-              {lead.ownerManagerAssignment && (
-                <div className="flex items-center gap-2 text-blue-300">
-                  <UserPlus className="h-4 w-4" />
-                  <span>Assigned by: {lead.ownerManagerAssignmentName}</span>
-                </div>
-              )}
-              {lead.assignedAt && (
-                <div className="flex items-center gap-2 text-gray-300 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Assigned: {new Date(lead.assignedAt).toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                setSelectedLead(lead);
-                setEditFormData(lead);
-                setShowEditDialog(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              View/Edit
-            </Button>
-            {lead.bankSelection && lead.assignedStaff && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  setSelectedLead(lead);
-                  setShowFileTracker(true);
-                }}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <FileText className="h-4 w-4 mr-1" />
-                File Status
-              </Button>
-            )}
-            {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
-              !lead.assignedStaff && (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setSelectedLead(lead);
-                    setShowAssignDialog(true);
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Assign & Select Bank
-                </Button>
-              )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  // const LeadCard = ({ lead }: { lead: LeadForm }) => (
+  //   <Card className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300">
+  //     <CardContent className="p-6">
+  //       <div className="flex items-start justify-between mb-4">
+  //         <div className="flex-1">
+  //           <div className="flex items-center gap-2 mb-2">
+  //             <h3 className="font-semibold text-white">{lead.clientName}</h3>
+  //             <Badge
+  //               className={`${getStatusColor(
+  //                 lead.applicationStatus!
+  //               )} text-white border-0`}
+  //             >
+  //               {lead.applicationStatus}
+  //             </Badge>
+  //             {/* {lead.assignedStaff && lead.isVisibleToStaff ? (
+  //               <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
+  //                 Assigned & Visible
+  //               </Badge>
+  //             ) : lead.assignedStaff && !lead.isVisibleToStaff ? (
+  //               <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30">
+  //                 Assigned (Pending)
+  //               </Badge>
+  //             ) : (
+  //               <Badge className="bg-red-500/20 text-red-300 border-red-400/30">
+  //                 Unassigned
+  //               </Badge>
+  //             )} */}
+  //             {/* {lead.createdByStaff && (
+  //               <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+  //                 Staff Created
+  //               </Badge>
+  //             )} */}
+  //           </div>
+  //           <div className="space-y-1 text-sm text-gray-300">
+  //             <div className="flex items-center gap-2">
+  //               <Phone className="h-4 w-4" />
+  //               <span>{lead.contactNumber}</span>
+  //             </div>
+  //             <div className="flex items-center gap-2">
+  //               <Mail className="h-4 w-4" />
+  //               <span>{lead.email}</span>
+  //             </div>
+  //             <div className="flex items-center gap-2">
+  //               <Briefcase className="h-4 w-4" />
+  //               <span>{lead.leadType}</span>
+  //             </div>
+  //             {lead.bankSelection && (
+  //               <div className="flex items-center gap-2">
+  //                 <Building className="h-4 w-4" />
+  //                 <span>{lead.bankSelection}</span>
+  //               </div>
+  //             )}
+  //             {lead.assignedStaff && (
+  //               <div className="flex items-center gap-2">
+  //                 <User className="h-4 w-4" />
+  //                 <span>Assigned to: {lead.assignedStaffName}</span>
+  //               </div>
+  //             )}
+  //             {lead.ownerManagerAssignment && (
+  //               <div className="flex items-center gap-2 text-blue-300">
+  //                 <UserPlus className="h-4 w-4" />
+  //                 <span>Assigned by: {lead.ownerManagerAssignmentName}</span>
+  //               </div>
+  //             )}
+  //             {lead.assignedAt && (
+  //               <div className="flex items-center gap-2 text-gray-300 text-sm">
+  //                 <Calendar className="h-4 w-4" />
+  //                 <span>
+  //                   Assigned: {new Date(lead.assignedAt).toLocaleString()}
+  //                 </span>
+  //               </div>
+  //             )}
+  //           </div>
+  //         </div>
+  //         <div className="flex flex-col gap-2">
+  //           <Button
+  //             size="sm"
+  //             onClick={() => {
+  //               setSelectedLead(lead);
+  //               setEditFormData(lead);
+  //               setShowEditDialog(true);
+  //             }}
+  //             className="bg-blue-600 hover:bg-blue-700 text-white"
+  //           >
+  //             <Eye className="h-4 w-4 mr-1" />
+  //             View/Edit
+  //           </Button>
+  //           {lead.bankSelection && lead.assignedStaff && (
+  //             <Button
+  //               size="sm"
+  //               onClick={() => {
+  //                 setSelectedLead(lead);
+  //                 setShowFileTracker(true);
+  //               }}
+  //               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+  //             >
+  //               <FileText className="h-4 w-4 mr-1" />
+  //               File Status
+  //             </Button>
+  //           )}
+  //           {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
+  //             !lead.assignedStaff && (
+  //               <Button
+  //                 size="sm"
+  //                 onClick={() => {
+  //                   setSelectedLead(lead);
+  //                   setShowAssignDialog(true);
+  //                 }}
+  //                 className="bg-green-600 hover:bg-green-700 text-white"
+  //               >
+  //                 <UserPlus className="h-4 w-4 mr-1" />
+  //                 Assign & Select Bank
+  //               </Button>
+  //             )}
+  //         </div>
+  //       </div>
+  //     </CardContent>
+  //   </Card>
+  // );
 
   const getStaffMembers = () => {
     return staff;
@@ -903,7 +800,6 @@ export default function LeadManagementPage() {
       </Dialog>
 
       {/* Modals */}
-      {showPipelineView && <PipelineView />}
       {selectedLead && !showFileTracker && (
         <LeadDetailView
           lead={selectedLead}
@@ -959,28 +855,73 @@ export default function LeadManagementPage() {
       )}
 
       <main className="flex-1 p-8">
+        {/* Enhanced Filters */}
+        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-8">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search leads..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/10 border-white/20 placeholder:text-gray-400"
+                />
+              </div>
+              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="bg-white/10 border-white/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="sanctioned">Sanctioned</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select> */}
+              {/* <Select
+                value={assignmentFilter}
+                onValueChange={setAssignmentFilter}
+              >
+                <SelectTrigger className="bg-white/10 border-white/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Leads</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                </SelectContent>
+              </Select> */}
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="bg-white/10 border-white/20 mr-2"
+              />
+              <Button
+                onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white col-start-5"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Lead
+              </Button>
+              {/* <Button
+                variant="outline"
+                onClick={exportToCSV}
+                className="bg-white/10 border-white/20 hover:bg-white/20"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button> */}
+            </div>
+          </CardContent>
+        </Card>
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-teal-700 bg-clip-text text-transparent">
               Lead Pipeline by Loan Type
             </h2>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowPipelineView(true)}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-              >
-                <Target className="mr-2 h-4 w-4" />
-                Detailed Pipeline View
-              </Button>
-
-              <Button
-                onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Lead
-              </Button>
-            </div>
           </div>
 
           {(() => {
@@ -990,6 +931,8 @@ export default function LeadManagementPage() {
               acc[type].push(lead);
               return acc;
             }, {} as Record<string, LeadForm[]>);
+
+            console.log(leadsByType);
 
             return (
               <div className="space-y-8">
@@ -1004,32 +947,10 @@ export default function LeadManagementPage() {
                           <Briefcase className="h-5 w-5 text-teal-600" />
                           {loanType} ({typeLeads.length} leads)
                         </CardTitle>
-                        <div className="flex gap-2">
-                          <Badge className="bg-blue-500 text-white">
-                            New:{" "}
-                            {typeLeads.filter((l) => !l.assignedStaff).length}
-                          </Badge>
-                          <Badge className="bg-green-500 text-white">
-                            Sanctioned:{" "}
-                            {
-                              typeLeads.filter(
-                                (l) => l.applicationStatus === "sanctioned"
-                              ).length
-                            }
-                          </Badge>
-                          <Badge className="bg-red-500 text-white">
-                            Rejected:{" "}
-                            {
-                              typeLeads.filter(
-                                (l) => l.applicationStatus === "rejected"
-                              ).length
-                            }
-                          </Badge>
-                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {/* New Leads Column */}
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
@@ -1073,11 +994,6 @@ export default function LeadManagementPage() {
                                           : lead.leadSource || "Unknown"}
                                       </Badge>
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                      {new Date(
-                                        lead.createdAt!
-                                      ).toLocaleDateString()}
-                                    </p>
                                   </div>
                                 </Card>
                               ))}
@@ -1092,22 +1008,12 @@ export default function LeadManagementPage() {
                               Assigned Leads
                             </h4>
                             <Badge className="bg-blue-500 text-white">
-                              {
-                                typeLeads.filter(
-                                  (l) =>
-                                    l.assignedStaff &&
-                                    l.applicationStatus === "pending"
-                                ).length
-                              }
+                              {typeLeads.filter((l) => l.assignedStaff).length}
                             </Badge>
                           </div>
                           <div className="space-y-2 max-h-96 overflow-y-auto">
                             {typeLeads
-                              .filter(
-                                (l) =>
-                                  l.assignedStaff &&
-                                  l.applicationStatus === "pending"
-                              )
+                              .filter((l) => l.assignedStaff)
                               .map((lead) => (
                                 <Card
                                   key={lead.id}
@@ -1121,187 +1027,16 @@ export default function LeadManagementPage() {
                                   <div className="space-y-1">
                                     <h5 className="font-medium text-sm text-gray-900">
                                       {lead.clientName}
+                                      {lead.leadName
+                                        ? ` (${lead.leadName})`
+                                        : ""}
                                     </h5>
                                     <p className="text-xs text-gray-600">
                                       {lead.contactNumber}
                                     </p>
-                                    <div className="flex items-center gap-1">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {lead.assignedStaff}
-                                      </Badge>
-                                    </div>
                                     <p className="text-xs text-gray-500">
                                       Bank:{" "}
                                       {lead.bankSelection || "Not assigned"}
-                                    </p>
-                                  </div>
-                                </Card>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Processing Column */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <Clock className="h-4 w-4 text-yellow-600" />
-                            <h4 className="font-semibold text-yellow-800">
-                              Processing
-                            </h4>
-                            <Badge className="bg-yellow-500 text-white">
-                              {
-                                typeLeads.filter(
-                                  (l) =>
-                                    l.applicationStatus === "login" ||
-                                    (l.applicationStatus === "pending" &&
-                                      l.bankSelection)
-                                ).length
-                              }
-                            </Badge>
-                          </div>
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {typeLeads
-                              .filter(
-                                (l) =>
-                                  l.applicationStatus === "login" ||
-                                  (l.applicationStatus === "pending" &&
-                                    l.bankSelection)
-                              )
-                              .map((lead) => (
-                                <Card
-                                  key={lead.id}
-                                  className="p-3 bg-white border border-yellow-200 hover:shadow-md transition-shadow cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedLead(lead);
-                                    setEditFormData(lead);
-                                    setShowEditDialog(true);
-                                  }}
-                                >
-                                  <div className="space-y-1">
-                                    <h5 className="font-medium text-sm text-gray-900">
-                                      {lead.clientName}
-                                    </h5>
-                                    <p className="text-xs text-gray-600">
-                                      {lead.contactNumber}
-                                    </p>
-                                    <div className="flex items-center gap-1">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {lead.bankSelection}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                      Status: {lead.applicationStatus}
-                                    </p>
-                                  </div>
-                                </Card>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Sanctioned Column */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <h4 className="font-semibold text-green-800">
-                              Sanctioned
-                            </h4>
-                            <Badge className="bg-green-500 text-white">
-                              {
-                                typeLeads.filter(
-                                  (l) => l.applicationStatus === "sanctioned"
-                                ).length
-                              }
-                            </Badge>
-                          </div>
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {typeLeads
-                              .filter(
-                                (l) => l.applicationStatus === "sanctioned"
-                              )
-                              .map((lead) => (
-                                <Card
-                                  key={lead.id}
-                                  className="p-3 bg-white border border-green-200 hover:shadow-md transition-shadow cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedLead(lead);
-                                    setEditFormData(lead);
-                                    setShowEditDialog(true);
-                                  }}
-                                >
-                                  <div className="space-y-1">
-                                    <h5 className="font-medium text-sm text-gray-900">
-                                      {lead.clientName}
-                                    </h5>
-                                    <p className="text-xs text-gray-600">
-                                      {lead.contactNumber}
-                                    </p>
-                                    <div className="flex items-center gap-1">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {lead.bankSelection}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs text-green-600 font-medium">
-                                      ✓ Sanctioned
-                                    </p>
-                                  </div>
-                                </Card>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Rejected Column */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
-                            <XCircle className="h-4 w-4 text-red-600" />
-                            <h4 className="font-semibold text-red-800">
-                              Rejected
-                            </h4>
-                            <Badge className="bg-red-500 text-white">
-                              {
-                                typeLeads.filter(
-                                  (l) => l.applicationStatus === "rejected"
-                                ).length
-                              }
-                            </Badge>
-                          </div>
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {typeLeads
-                              .filter((l) => l.applicationStatus === "rejected")
-                              .map((lead) => (
-                                <Card
-                                  key={lead.id}
-                                  className="p-3 bg-white border border-red-200 hover:shadow-md transition-shadow cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedLead(lead);
-                                    setEditFormData(lead);
-                                    setShowEditDialog(true);
-                                  }}
-                                >
-                                  <div className="space-y-1">
-                                    <h5 className="font-medium text-sm text-gray-900">
-                                      {lead.clientName}
-                                    </h5>
-                                    <p className="text-xs text-gray-600">
-                                      {lead.contactNumber}
-                                    </p>
-                                    <div className="flex items-center gap-1">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {lead.bankSelection}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs text-red-600 font-medium">
-                                      ✗ Rejected
                                     </p>
                                   </div>
                                 </Card>
@@ -1317,162 +1052,12 @@ export default function LeadManagementPage() {
           })()}
         </div>
 
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-10">
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-400/30 hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">
-                Login
-              </CardTitle>
-              <div className="w-4 h-4 rounded-full bg-blue-500 animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {loginLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border-orange-400/30 hover:from-orange-500/30 hover:to-yellow-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-100">
-                Pending
-              </CardTitle>
-              <div className="w-4 h-4 rounded-full bg-orange-500 animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {pendingLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/30 hover:from-green-500/30 hover:to-emerald-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-100">
-                Sanctioned
-              </CardTitle>
-              <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {sanctionedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-400/30 hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-red-100">
-                Rejected
-              </CardTitle>
-              <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {rejectedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border-purple-400/30 hover:from-purple-500/30 hover:to-violet-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-100">
-                Assigned
-              </CardTitle>
-              <Users className="h-4 w-4 text-purple-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {assignedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-gradient-to-br from-gray-500/20 to-slate-500/20 border-gray-400/30 hover:from-gray-500/30 hover:to-slate-500/30 transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-100">
-                Unassigned
-              </CardTitle>
-              <AlertCircle className="h-4 w-4 text-gray-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {unassignedLeads.length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Enhanced Filters */}
-        <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-8">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search leads..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="login">Login</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="sanctioned">Sanctioned</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={assignmentFilter}
-                onValueChange={setAssignmentFilter}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Leads</SelectItem>
-                  <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="bg-white/10 border-white/20 text-white"
-              />
-              <Button
-                onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Lead
-              </Button>
-              <Button
-                variant="outline"
-                onClick={exportToCSV}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Lead List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredLeads.map((lead) => (
             <LeadCard key={lead.id} lead={lead} />
           ))}
-        </div>
+        </div> */}
 
         {filteredLeads.length === 0 && (
           <Card className="backdrop-blur-xl bg-white/10 border-white/20">
