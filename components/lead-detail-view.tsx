@@ -15,14 +15,32 @@ import {
   Plus,
   CheckCircle,
   Key,
+  UserPlus,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
+import { Label } from "./ui/label";
 import { useState } from "react";
 import { getAllLeads } from "@/services/lead-service";
 import EditLeadDialog from "./edit-lead-dialog";
 import { LeadFormDetailsConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@radix-ui/react-select";
+import { Select } from "react-day-picker";
+import AssignReassign from "./assign-reassign";
 
 const LeadDetailView = ({
   lead,
@@ -36,6 +54,7 @@ const LeadDetailView = ({
   disableEdit?: boolean;
 }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
   const getLeadTimeline = (lead: LeadForm) => {
     const timeline = [
@@ -61,7 +80,7 @@ const LeadDetailView = ({
       {
         stage: "Bank Assignment",
         value: "",
-        status: lead.bankStatus,
+        status: lead.bankSelection ? "Assigned" : "pending",
         icon: Building2,
         className: "",
       },
@@ -88,6 +107,34 @@ const LeadDetailView = ({
             className="text-white hover:bg-white/10"
           >
             <XCircle className="h-6 w-6" />
+          </Button>
+        </div>
+
+        {!disableEdit && (
+          <div className="my-3">
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                setSelectedLead(lead); // Ensure selectedLead is set
+                setEditFormData(lead);
+                setShowEditDialog(true);
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Lead Details
+            </Button>
+          </div>
+        )}
+
+        <div className="my-3">
+          <Button
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => {
+              setShowAssignDialog(true);
+            }}
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Assign/Re Assign
           </Button>
         </div>
 
@@ -169,23 +216,8 @@ const LeadDetailView = ({
             </Card>
           </div>
         </div>
-
-        {!disableEdit && (
-          <div className="my-3">
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => {
-                setSelectedLead(lead); // Ensure selectedLead is set
-                setEditFormData(lead);
-                setShowEditDialog(true);
-              }}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Lead Details
-            </Button>
-          </div>
-        )}
       </div>
+
       <EditLeadDialog
         open={showEditDialog && !disableEdit}
         lead={lead}
@@ -198,6 +230,12 @@ const LeadDetailView = ({
           setSelectedLead(null);
           setEditFormData({});
         }}
+      />
+
+      <AssignReassign
+        lead={lead}
+        open={showAssignDialog}
+        setOpen={setShowAssignDialog}
       />
     </div>
   );

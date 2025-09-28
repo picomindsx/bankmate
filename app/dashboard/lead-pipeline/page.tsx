@@ -1191,7 +1191,11 @@ export default function LeadPipelinePage() {
 
       {/* Modals */}
       {selectedLead && !showFileTracker && (
-        <LeadDetailView lead={selectedLead} setSelectedLead={setSelectedLead} />
+        <LeadDetailView
+          lead={selectedLead}
+          setSelectedLead={setSelectedLead}
+          setLeads={() => {}}
+        />
       )}
     </div>
   );
