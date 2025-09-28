@@ -858,7 +858,7 @@ export default function LeadManagementPage() {
         {/* Enhanced Filters */}
         <Card className="backdrop-blur-xl bg-white/10 border-white/20 mb-8">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -901,19 +901,19 @@ export default function LeadManagementPage() {
               />
               <Button
                 onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white col-start-5"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Lead
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={exportToCSV}
                 className="bg-white/10 border-white/20 hover:bg-white/20"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Export
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
@@ -922,15 +922,6 @@ export default function LeadManagementPage() {
             <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-teal-700 bg-clip-text text-transparent">
               Lead Pipeline by Loan Type
             </h2>
-            <div>
-              <Button
-                onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Lead
-              </Button>
-            </div>
           </div>
 
           {(() => {
@@ -1017,22 +1008,12 @@ export default function LeadManagementPage() {
                               Assigned Leads
                             </h4>
                             <Badge className="bg-blue-500 text-white">
-                              {
-                                typeLeads.filter(
-                                  (l) =>
-                                    l.assignedStaff &&
-                                    l.applicationStatus === "pending"
-                                ).length
-                              }
+                              {typeLeads.filter((l) => l.assignedStaff).length}
                             </Badge>
                           </div>
                           <div className="space-y-2 max-h-96 overflow-y-auto">
                             {typeLeads
-                              .filter(
-                                (l) =>
-                                  l.assignedStaff &&
-                                  l.applicationStatus === "pending"
-                              )
+                              .filter((l) => l.assignedStaff)
                               .map((lead) => (
                                 <Card
                                   key={lead.id}
@@ -1046,6 +1027,9 @@ export default function LeadManagementPage() {
                                   <div className="space-y-1">
                                     <h5 className="font-medium text-sm text-gray-900">
                                       {lead.clientName}
+                                      {lead.leadName
+                                        ? ` (${lead.leadName})`
+                                        : ""}
                                     </h5>
                                     <p className="text-xs text-gray-600">
                                       {lead.contactNumber}
