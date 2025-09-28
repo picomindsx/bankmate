@@ -107,8 +107,6 @@ export const updateStaff = async (
   staffId: string,
   updates: Partial<User>
 ): Promise<Boolean> => {
-  console.log(staffId, updates);
-
   const { data: updatedUser, error: userError } = await supabase
     .from("users")
     .update({

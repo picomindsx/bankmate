@@ -47,6 +47,7 @@ import {
   Search,
   Download,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { FileStatusTracker } from "@/components/file-status-tracker";
@@ -57,12 +58,28 @@ import {
   assignLeadToStaff,
   updateLead,
   getBranchLeads,
+  deleteLead,
+  getAllLeads,
 } from "@/services/lead-service";
 import { getStaff } from "@/services/staff-service";
 import { Branch, Lead, LeadForm } from "@/types/common";
 import { getDocumentCompletionStatus } from "@/services/document-service";
 import LeadDetailView from "@/components/lead-detail-view";
 import { getStatusColor } from "@/lib/utils";
+import {
+  AlertDialogHeader,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@radix-ui/react-alert-dialog";
+import AssignReassign from "@/components/assign-reassign";
 
 export default function LeadManagementPage() {
   const { user, logout } = useAuth();
@@ -97,7 +114,6 @@ export default function LeadManagementPage() {
 
   const [showReassignDialog, setShowReassignDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showBankDialog, setShowBankDialog] = useState(false);
   const [selectedStaffForReassign, setSelectedStaffForReassign] = useState("");
   const [selectedBankForChange, setSelectedBankForChange] = useState("");
@@ -161,19 +177,6 @@ export default function LeadManagementPage() {
     return matchesSearch && matchesDate && matchesStatus && matchesAssignment;
   });
 
-  const loginLeads = leads.filter((lead) => lead.applicationStatus === "login");
-  const pendingLeads = leads.filter(
-    (lead) => lead.applicationStatus === "pending"
-  );
-  const sanctionedLeads = leads.filter(
-    (lead) => lead.applicationStatus === "sanctioned"
-  );
-  const rejectedLeads = leads.filter(
-    (lead) => lead.applicationStatus === "rejected"
-  );
-  const assignedLeads = leads.filter(
-    (lead) => lead.assignedStaff && lead.assignedStaff !== ""
-  );
   const unassignedLeads = leads.filter(
     (lead) => !lead.assignedStaff || lead.assignedStaff === ""
   );
@@ -226,212 +229,12 @@ export default function LeadManagementPage() {
     }
   };
 
-  const getDocumentStatusColor = (status: string) => {
-    switch (status) {
-      case "Pending":
-        return "bg-red-500";
-      case "Provided":
-        return "bg-orange-500";
-      case "Verified":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
+  const handleDeleteLead = async (leadId: string) => {
+    const success = await deleteLead(leadId);
+    if (success) {
+      getAllLeads().then((leadList) => setLeads(leadList));
     }
   };
-
-  const exportToCSV = () => {
-    const csvContent = [
-      [
-        "Lead Name",
-        "Client Name",
-        "Contact",
-        "Email",
-        "Product Type",
-        "Assigned Staff",
-        "Application Status",
-        "Bank",
-        "Created Date",
-      ].join(","),
-      ...filteredLeads.map((lead) =>
-        [
-          lead.leadName || "",
-          lead.clientName,
-          lead.contactNumber,
-          lead.email,
-          lead.leadType,
-          lead.assignedStaff,
-          lead.applicationStatus,
-          lead.bankSelection || "",
-          new Date(lead.createdAt!).toLocaleDateString(),
-        ].join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `leads-${branch?.name}-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    a.click();
-  };
-
-  const getLeadTimeline = (lead: LeadForm) => {
-    const timeline = [
-      {
-        stage: "Lead Created",
-        date: lead.createdAt,
-        status: "completed",
-        icon: Plus,
-      },
-
-      {
-        stage: "Bank Assignment",
-        date: lead.bankAssignedAt || null,
-        status: lead.bankSelection ? "completed" : "pending",
-        icon: Building2,
-      },
-      {
-        stage: "Application Status",
-        date: lead.statusUpdatedAt || null,
-        status: lead.applicationStatus === "pending" ? "pending" : "completed",
-        icon: CheckCircle,
-      },
-    ];
-    return timeline;
-  };
-
-  // const LeadCard = ({ lead }: { lead: LeadForm }) => (
-  //   <Card className="backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-300">
-  //     <CardContent className="p-6">
-  //       <div className="flex items-start justify-between mb-4">
-  //         <div className="flex-1">
-  //           <div className="flex items-center gap-2 mb-2">
-  //             <h3 className="font-semibold text-white">{lead.clientName}</h3>
-  //             <Badge
-  //               className={`${getStatusColor(
-  //                 lead.applicationStatus!
-  //               )} text-white border-0`}
-  //             >
-  //               {lead.applicationStatus}
-  //             </Badge>
-  //             {/* {lead.assignedStaff && lead.isVisibleToStaff ? (
-  //               <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
-  //                 Assigned & Visible
-  //               </Badge>
-  //             ) : lead.assignedStaff && !lead.isVisibleToStaff ? (
-  //               <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30">
-  //                 Assigned (Pending)
-  //               </Badge>
-  //             ) : (
-  //               <Badge className="bg-red-500/20 text-red-300 border-red-400/30">
-  //                 Unassigned
-  //               </Badge>
-  //             )} */}
-  //             {/* {lead.createdByStaff && (
-  //               <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
-  //                 Staff Created
-  //               </Badge>
-  //             )} */}
-  //           </div>
-  //           <div className="space-y-1 text-sm text-gray-300">
-  //             <div className="flex items-center gap-2">
-  //               <Phone className="h-4 w-4" />
-  //               <span>{lead.contactNumber}</span>
-  //             </div>
-  //             <div className="flex items-center gap-2">
-  //               <Mail className="h-4 w-4" />
-  //               <span>{lead.email}</span>
-  //             </div>
-  //             <div className="flex items-center gap-2">
-  //               <Briefcase className="h-4 w-4" />
-  //               <span>{lead.leadType}</span>
-  //             </div>
-  //             {lead.bankSelection && (
-  //               <div className="flex items-center gap-2">
-  //                 <Building className="h-4 w-4" />
-  //                 <span>{lead.bankSelection}</span>
-  //               </div>
-  //             )}
-  //             {lead.assignedStaff && (
-  //               <div className="flex items-center gap-2">
-  //                 <User className="h-4 w-4" />
-  //                 <span>Assigned to: {lead.assignedStaffName}</span>
-  //               </div>
-  //             )}
-  //             {lead.ownerManagerAssignment && (
-  //               <div className="flex items-center gap-2 text-blue-300">
-  //                 <UserPlus className="h-4 w-4" />
-  //                 <span>Assigned by: {lead.ownerManagerAssignmentName}</span>
-  //               </div>
-  //             )}
-  //             {lead.assignedAt && (
-  //               <div className="flex items-center gap-2 text-gray-300 text-sm">
-  //                 <Calendar className="h-4 w-4" />
-  //                 <span>
-  //                   Assigned: {new Date(lead.assignedAt).toLocaleString()}
-  //                 </span>
-  //               </div>
-  //             )}
-  //           </div>
-  //         </div>
-  //         <div className="flex flex-col gap-2">
-  //           <Button
-  //             size="sm"
-  //             onClick={() => {
-  //               setSelectedLead(lead);
-  //               setEditFormData(lead);
-  //               setShowEditDialog(true);
-  //             }}
-  //             className="bg-blue-600 hover:bg-blue-700 text-white"
-  //           >
-  //             <Eye className="h-4 w-4 mr-1" />
-  //             View/Edit
-  //           </Button>
-  //           {lead.bankSelection && lead.assignedStaff && (
-  //             <Button
-  //               size="sm"
-  //               onClick={() => {
-  //                 setSelectedLead(lead);
-  //                 setShowFileTracker(true);
-  //               }}
-  //               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-  //             >
-  //               <FileText className="h-4 w-4 mr-1" />
-  //               File Status
-  //             </Button>
-  //           )}
-  //           {[`owner`, `manager`, `branch_head`].includes(user?.role || "") &&
-  //             !lead.assignedStaff && (
-  //               <Button
-  //                 size="sm"
-  //                 onClick={() => {
-  //                   setSelectedLead(lead);
-  //                   setShowAssignDialog(true);
-  //                 }}
-  //                 className="bg-green-600 hover:bg-green-700 text-white"
-  //               >
-  //                 <UserPlus className="h-4 w-4 mr-1" />
-  //                 Assign & Select Bank
-  //               </Button>
-  //             )}
-  //         </div>
-  //       </div>
-  //     </CardContent>
-  //   </Card>
-  // );
-
-  const getStaffMembers = () => {
-    return staff;
-  };
-
-  const documentTypes = [
-    "Aadhar Card",
-    "PAN Card",
-    "Salary Slips",
-    "Bank Statements",
-  ];
 
   if (!user || user.type !== "official" || !branch) {
     return <div>Loading...</div>;
@@ -497,141 +300,12 @@ export default function LeadManagementPage() {
         </div>
       </header>
 
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Assign Lead to Staff & Select Bank
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Assign {selectedLead?.clientName} to a staff member and select a
-              bank. Document management will be available after assignment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="staff" className="text-white">
-                  Select Staff Member
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCustomStaffDialog(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Custom Staff
-                </Button>
-              </div>
-              <Select
-                value={selectedStaffId}
-                onValueChange={setSelectedStaffId}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Choose staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {staff.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.name} - {member.designation}
-                      {member.isCustom && (
-                        <Badge className="ml-2 bg-blue-500 text-white">
-                          Custom
-                        </Badge>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="bank" className="text-white">
-                  Select Bank (Required for Document Management)
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCustomBankDialog(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white border-green-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Custom Bank
-                </Button>
-              </div>
-              <Select
-                value={selectedBank}
-                onValueChange={(value) => {
-                  if (value === "Add Custom Bank...") {
-                    setShowCustomBankDialog(true);
-                  } else {
-                    setSelectedBank(value);
-                  }
-                }}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Choose bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allBanks.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
-                      {customBanks.includes(bank) && (
-                        <Badge className="ml-2 bg-green-500 text-white">
-                          Custom
-                        </Badge>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-500/30">
-              <h4 className="text-white font-medium mb-2">
-                Assignment Summary
-              </h4>
-              <div className="space-y-2 text-sm text-gray-300">
-                <div>
-                  Lead:{" "}
-                  <span className="text-white">{selectedLead?.clientName}</span>
-                </div>
-                <div>
-                  Product:{" "}
-                  <span className="text-white">{selectedLead?.leadType}</span>
-                </div>
-                <div>
-                  Branch: <span className="text-white">{branch?.name}</span>
-                </div>
-                <div>
-                  Staff:{" "}
-                  <span className="text-white">
-                    {staff.find((s) => s.id === selectedStaffId)?.name ||
-                      "Not selected"}
-                  </span>
-                </div>
-                <div>
-                  Bank:{" "}
-                  <span className="text-white">
-                    {selectedBank || "Not selected"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleAssignLead}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-              disabled={!selectedStaffId || !selectedBank}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Assign Lead & Make Visible to Staff
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AssignReassign
+        lead={selectedLead}
+        setLead={setSelectedLead}
+        open={showAssignDialog}
+        setOpen={setShowAssignDialog}
+      />
 
       <Dialog
         open={showCustomBankDialog}
@@ -932,8 +606,6 @@ export default function LeadManagementPage() {
               return acc;
             }, {} as Record<string, LeadForm[]>);
 
-            console.log(leadsByType);
-
             return (
               <div className="space-y-8">
                 {Object.entries(leadsByType).map(([loanType, typeLeads]) => (
@@ -972,7 +644,6 @@ export default function LeadManagementPage() {
                                   onClick={() => {
                                     setSelectedLead(lead);
                                     setEditFormData(lead);
-                                    setShowEditDialog(true);
                                   }}
                                 >
                                   <div className="space-y-1">
@@ -994,6 +665,81 @@ export default function LeadManagementPage() {
                                           : lead.leadSource || "Unknown"}
                                       </Badge>
                                     </div>
+                                  </div>
+
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedLead(lead);
+                                        // setEditFormData(lead);
+                                      }}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-6"
+                                    >
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      View
+                                    </Button>
+                                    {[
+                                      `owner`,
+                                      `manager`,
+                                      `branch_head`,
+                                    ].includes(user?.role || "") &&
+                                      !lead.assignedStaff && (
+                                        <Button
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedLead(lead);
+                                            setShowAssignDialog(true);
+                                            // onAssign(lead);
+                                          }}
+                                          className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6"
+                                        >
+                                          <UserPlus className="h-3 w-3 mr-1" />
+                                          Assign
+                                        </Button>
+                                      )}
+
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant={"destructive"}
+                                          className="text-xs px-2 py-1 h-6"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-1" />
+                                          Delete
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>
+                                            Are you sure you want to delete this
+                                            Lead?
+                                          </AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This will permanently delete the
+                                            Lead's account, revoke their access
+                                            to all systems, and remove any data
+                                            or files associated only with their
+                                            user profile.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>
+                                            Cancel
+                                          </AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={() =>
+                                              handleDeleteLead(lead.id || "")
+                                            }
+                                          >
+                                            Continue
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                   </div>
                                 </Card>
                               ))}
@@ -1021,7 +767,6 @@ export default function LeadManagementPage() {
                                   onClick={() => {
                                     setSelectedLead(lead);
                                     setEditFormData(lead);
-                                    setShowEditDialog(true);
                                   }}
                                 >
                                   <div className="space-y-1">
@@ -1038,6 +783,72 @@ export default function LeadManagementPage() {
                                       Bank:{" "}
                                       {lead.bankSelection || "Not assigned"}
                                     </p>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedLead(lead);
+                                        }}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-6"
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View
+                                      </Button>
+
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedLead(lead);
+                                          setShowAssignDialog(true);
+                                        }}
+                                        className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1 h-6"
+                                      >
+                                        <UserPlus className="h-3 w-3 mr-1" />
+                                        Reassign
+                                      </Button>
+
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant={"destructive"}
+                                            className="text-xs px-2 py-1 h-6"
+                                          >
+                                            <Trash2 className="h-4 w-4 mr-1" />
+                                            Delete
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>
+                                              Are you sure you want to delete
+                                              this Lead?
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              This will permanently delete the
+                                              Lead's account, revoke their
+                                              access to all systems, and remove
+                                              any data or files associated only
+                                              with their user profile.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>
+                                              Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={() =>
+                                                handleDeleteLead(lead.id || "")
+                                              }
+                                            >
+                                              Continue
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
                                   </div>
                                 </Card>
                               ))}

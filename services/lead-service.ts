@@ -207,5 +207,5 @@ export const deleteLead = async (leadId: string): Promise<Boolean> => {
     return false;
   }
   toast.success("Lead deleted");
-  return false;
+  return true;
 };

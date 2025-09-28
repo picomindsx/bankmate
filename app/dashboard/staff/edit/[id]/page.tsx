@@ -58,7 +58,6 @@ export default function EditStaffPage() {
     getStaffById(staffId).then((member) => {
       if (member) {
         setStaffMember(member);
-        console.log({ member });
         setFormData({
           name: member.name || "",
           phone: member.phone || "",
@@ -92,10 +91,6 @@ export default function EditStaffPage() {
         return;
       }
 
-      console.log("first");
-
-      console.log(formData);
-
       const updated = await updateStaff(staffId, {
         name: formData.name,
         phone: formData.phone,
@@ -104,7 +99,7 @@ export default function EditStaffPage() {
         photo: formData.photo,
         branchId: formData.branchId,
       });
-      console.log(updated);
+
       if (updated) {
         setSuccess("Staff member updated successfully!");
         setFormData({

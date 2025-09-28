@@ -35,7 +35,6 @@ export const authenticateUser = async (
     if (data.password === password) {
       const user: User = { ...data } as User;
       user.lastLogin = new Date().toISOString();
-      console.log("[v0] User authenticated:", user.name || "official owner");
       return user;
     } else {
       toast.error("Invalid password");
