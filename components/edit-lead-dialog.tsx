@@ -72,7 +72,7 @@ const EditLeadDialog = ({
       statusUpdatedAt: new Date().toISOString(), // Update statusUpdatedAt on any edit
     };
 
-    const success = await updateLead(updatedLead.id!, updatedLead);
+    const success = await updateLead(lead.id!, updatedLead);
     if (success) {
       // getBranchLeads(branchId).then((branchLeads) => setLeads(branchLeads));
       // setShowEditDialog(false);
