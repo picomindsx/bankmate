@@ -26,6 +26,7 @@ import EditLeadDialog from "./edit-lead-dialog";
 import { LeadFormDetailsConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import AssignReassign from "./assign-reassign";
+import { useAuth } from "@/hooks/use-auth";
 
 const LeadDetailView = ({
   lead,
@@ -41,6 +42,7 @@ const LeadDetailView = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
+  const { user } = useAuth();
   const getLeadTimeline = (lead: LeadForm) => {
     const timeline = [
       {
@@ -111,17 +113,19 @@ const LeadDetailView = ({
           </div>
         )}
 
-        <div className="my-3">
-          <Button
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-            onClick={() => {
-              setShowAssignDialog(true);
-            }}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Assign/Re Assign
-          </Button>
-        </div>
+        {user?.role !== "staff" && (
+          <div className="my-3">
+            <Button
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              onClick={() => {
+                setShowAssignDialog(true);
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Assign/Re Assign
+            </Button>
+          </div>
+        )}
 
         {/* Timeline */}
         <div className="space-y-6 my-4">

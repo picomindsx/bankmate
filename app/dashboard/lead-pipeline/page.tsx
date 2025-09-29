@@ -952,6 +952,7 @@ export default function LeadPipelinePage() {
                       contact: e.target.value,
                     }))
                   }
+                  type="tel"
                   placeholder="Enter contact number"
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                 />

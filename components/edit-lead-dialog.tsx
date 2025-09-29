@@ -186,65 +186,72 @@ const EditLeadDialog = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
                 <div className="space-y-2">
-                  <Label htmlFor="assignedStaff">Assigned Staff</Label>
+                  <Label htmlFor="assignedStaff">Select staff member</Label>
 
-                  <select
-                    id="assignedStaff"
+                  <Select
                     value={editFormData.assignedStaff}
-                    onChange={(e) =>
+                    onValueChange={(value) => {
                       setEditFormData({
                         ...editFormData,
-                        assignedStaff: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded-md bg-background"
+                        assignedStaff: value,
+                      });
+                    }}
+                    disabled={user?.type == "employee" || user?.role == "staff"}
                   >
-                    <option value="">Select staff member</option>
-                    {staff
-                      .filter(
-                        (member) =>
-                          member.type === "employee" && member.role === "staff"
-                      )
-                      .map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name} - {member.designation}
-                        </option>
-                      ))}
-                  </select>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff
+                        .filter(
+                          (member) =>
+                            member.type === "employee" &&
+                            member.role === "staff"
+                        )
+                        .map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name} - {member.designation}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ownerManagerAssignment">
                     Owner/Manager Assignment
                   </Label>
 
-                  <select
-                    id="ownerManagerAssignment"
+                  <Select
                     value={editFormData.ownerManagerAssignment}
-                    onChange={(e) =>
+                    onValueChange={(value) => {
                       setEditFormData({
                         ...editFormData,
-                        ownerManagerAssignment: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded-md bg-background"
+                        ownerManagerAssignment: value,
+                      });
+                    }}
+                    disabled={user?.type == "employee" || user?.role == "staff"}
                   >
-                    <option value="">Select owner/manager</option>
-                    {staff
-                      .filter(
-                        (member) =>
-                          member.type === "official" &&
-                          ["owner", "manager", "branch_head"].includes(
-                            member.role
-                          )
-                      )
-                      .map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name} - {member.designation}
-                        </option>
-                      ))}
-                  </select>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select owner/manager" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff
+                        .filter(
+                          (member) =>
+                            member.type === "official" &&
+                            ["owner", "manager", "branch_head"].includes(
+                              member.role
+                            )
+                        )
+                        .map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name} - {member.designation}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -271,7 +278,7 @@ const EditLeadDialog = ({
                       Contact Number
                     </label>
                     <input
-                      type="text"
+                      type="tel"
                       value={editFormData.contactNumber || ""}
                       onChange={(e) =>
                         setEditFormData({
@@ -765,6 +772,7 @@ const EditLeadDialog = ({
                           })
                         }
                         placeholder="Enter loan amount"
+                        type="number"
                       />
                     </div>
                     <div className="space-y-2">
@@ -780,6 +788,7 @@ const EditLeadDialog = ({
                           })
                         }
                         placeholder="Enter loan tenure in months"
+                        type="number"
                       />
                     </div>
                     {/* TODO: <div className="space-y-2">
