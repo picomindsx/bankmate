@@ -711,6 +711,7 @@ export function FileStatusTracker({
                                       e.target.value
                                     )
                                   }
+                                  type="tel"
                                   placeholder="Enter contact"
                                   className="text-sm"
                                 />

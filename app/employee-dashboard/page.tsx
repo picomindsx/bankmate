@@ -1490,6 +1490,7 @@ const EmployeeDashboard = () => {
                       setNewLead({ ...newLead, loanAmount: e.target.value })
                     }
                     placeholder="Enter loan amount"
+                    type="number"
                   />
                 </div>
                 <div className="space-y-2">

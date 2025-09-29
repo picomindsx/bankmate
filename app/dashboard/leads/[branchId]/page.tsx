@@ -413,6 +413,7 @@ export default function LeadManagementPage() {
                 <Input
                   id="staffContact"
                   value={newCustomStaff.contact}
+                  type="tel"
                   onChange={(e) =>
                     setNewCustomStaff((prev) => ({
                       ...prev,

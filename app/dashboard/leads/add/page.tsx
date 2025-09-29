@@ -108,6 +108,7 @@ export default function AddLeadPage() {
                   <Label htmlFor="contactNumber">Contact Number *</Label>
                   <Input
                     id="contactNumber"
+                    type="tel"
                     value={formData.contactNumber}
                     onChange={(e) =>
                       handleInputChange("contactNumber", e.target.value)
