@@ -143,12 +143,12 @@ export default function DashboardPage() {
     setEditName(currentName);
   };
 
-  const handleSaveBranch = (branchId: string) => {
-    if (updateBranchName(branchId, editName)) {
+  const handleSaveBranch = async (branchId: string) => {
+    updateBranchName(branchId, editName).then(() => {
       getBranches().then((branchList) => setBranches(branchList));
       setEditingBranch(null);
       setEditName("");
-    }
+    });
   };
 
   const handleCancelEdit = () => {

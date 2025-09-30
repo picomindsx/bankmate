@@ -2,6 +2,7 @@ import { branches } from "@/lib/consts";
 import { supabase } from "@/lib/supabase";
 import { mapDbList } from "@/lib/utils";
 import { Branch } from "@/types/common";
+import { toast } from "sonner";
 
 // Branch management
 export const getBranches = async (): Promise<Branch[]> => {
@@ -13,16 +14,20 @@ export const getBranches = async (): Promise<Branch[]> => {
   return mapDbList<Branch>(branchList.data);
 };
 
-export const updateBranchName = (
+export const updateBranchName = async (
   branchId: string,
   newName: string
-): boolean => {
-  const branchIndex = branches.findIndex((b) => b.id === branchId);
-  if (branchIndex !== -1) {
-    branches[branchIndex].name = newName;
-    return true;
+): Promise<Boolean> => {
+  const { data, error } = await supabase
+    .from("branches")
+    .update({ name: newName })
+    .eq("id", branchId);
+  if (error) {
+    console.error("Error updating branch name: ", error);
+    return false;
   }
-  return false;
+  toast.success("Branch name updated successfully");
+  return true;
 };
 
 export const getBranchById = (branchId: string): Branch | undefined => {
