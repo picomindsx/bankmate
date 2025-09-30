@@ -77,7 +77,7 @@ export default function AddLeadPage() {
 
       const newLeadAdded = await addNewLead({
         ...formData,
-        assignedBranch: branchId,
+        assignedBranch: branchId || user?.branchId,
       });
 
       setSuccess(
