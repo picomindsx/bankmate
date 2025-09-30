@@ -633,17 +633,6 @@ export const LEAD_SOURCES = [
   "Email Campaign",
 ];
 
-export const BANKS = [
-  "State Bank of India (SBI)",
-  "HDFC Bank",
-  "ICICI Bank",
-  "Canara Bank",
-  "Punjab National Bank",
-  "Bank of Baroda",
-  "Axis Bank",
-  "Kotak Mahindra Bank",
-];
-
 export const APPLICATION_STATUS = [
   "login",
   "pending",

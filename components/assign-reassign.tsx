@@ -1,3 +1,5 @@
+"use client";
+
 import { Plus, Badge, UserPlus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -20,8 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { getStaff } from "@/services/staff-service";
-import { BANKS } from "@/lib/consts";
 import { updateLead } from "@/services/lead-service";
+import { useBank } from "@/hooks/use-bank";
+import { CustomList } from "./custom-list";
+import { addBank } from "@/services/bank-service";
 
 const AssignReassign = ({
   lead,
@@ -37,6 +41,8 @@ const AssignReassign = ({
   const [staff, setStaff] = useState<User[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string>();
   const [selectedBank, setSelectedBank] = useState<string>();
+
+  const { banks: BANKS, fetchBanks } = useBank();
 
   const handleAssignLead = async () => {
     await updateLead(lead?.id || "", {
@@ -99,7 +105,7 @@ const AssignReassign = ({
                 Select Bank
               </Label>
             </div>
-            <Select
+            {/* <Select
               value={selectedBank}
               onValueChange={(value) => {
                 setSelectedBank(value);
@@ -109,13 +115,32 @@ const AssignReassign = ({
                 <SelectValue placeholder="Choose bank" />
               </SelectTrigger>
               <SelectContent>
-                {BANKS.map((bank) => (
-                  <SelectItem key={bank} value={bank}>
-                    {bank}
+                {BANKS?.map((bank) => (
+                  <SelectItem key={bank.id} value={bank.name}>
+                    {bank.name}
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
+            <CustomList
+              value={selectedBank || ""}
+              items={
+                BANKS
+                  ? BANKS?.map((bank) => ({
+                      label: bank.name,
+                      value: bank.name,
+                    }))
+                  : []
+              }
+              type="bank"
+              onChange={(val) => setSelectedBank(val)}
+              onCustomAdd={async (val) => {
+                const bank = await addBank(val);
+                if (bank) {
+                  fetchBanks && fetchBanks();
+                }
+              }}
+            />
           </div>
 
           <Button

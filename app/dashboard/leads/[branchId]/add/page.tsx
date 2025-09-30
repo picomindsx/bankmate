@@ -22,18 +22,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { getBranches } from "@/services/branch-service";
 import { addNewLead } from "@/services/lead-service";
-import { getAllStaff, getStaff } from "@/services/staff-service";
+import { getAllStaff } from "@/services/staff-service";
 import { Branch, LeadForm, User } from "@/types/common";
-import {
-  APPLICATION_STATUS,
-  BANKS,
-  emptyLeadForm,
-  LEAD_SOURCES,
-} from "@/lib/consts";
+import { APPLICATION_STATUS, emptyLeadForm, LEAD_SOURCES } from "@/lib/consts";
 import { getStatusColor } from "@/lib/utils";
+import { useBank } from "@/hooks/use-bank";
+import { CustomList } from "@/components/custom-list";
+import { addBank } from "@/services/bank-service";
 
 export default function AddLeadPage() {
   const { user, logout } = useAuth();
+  const { banks: BANKS, fetchBanks } = useBank();
+
   const router = useRouter();
   const params = useParams();
   const branchId = params.branchId as string;
@@ -427,24 +427,28 @@ export default function AddLeadPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col items-start">
                   <Label htmlFor="selectedBank">Bank Selection</Label>
 
-                  <select
-                    id="selectedBank"
-                    value={formData.bankSelection}
-                    onChange={(e) =>
-                      handleInputChange("bankSelection", e.target.value)
+                  <CustomList
+                    value={formData.bankSelection || ""}
+                    items={
+                      BANKS
+                        ? BANKS?.map((bank) => ({
+                            label: bank.name,
+                            value: bank.name,
+                          }))
+                        : []
                     }
-                    className="w-full px-3 py-2 border rounded-md bg-background"
-                  >
-                    <option value="">Select bank</option>
-                    {BANKS.map((bank) => (
-                      <option key={bank} value={bank}>
-                        {bank}
-                      </option>
-                    ))}
-                  </select>
+                    type="bank"
+                    onChange={(val) => handleInputChange("bankSelection", val)}
+                    onCustomAdd={async (val) => {
+                      const bank = await addBank(val);
+                      if (bank) {
+                        fetchBanks && fetchBanks();
+                      }
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bankBranch">Bank Branch</Label>

@@ -199,7 +199,7 @@ export default function DashboardPage() {
             </Button>
 
             <div className="relative">
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -211,11 +211,11 @@ export default function DashboardPage() {
                     {notifications.length}
                   </Badge>
                 )}
-              </Button>
+              </Button> */}
 
               {/* Notification Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-xl max-h-96 overflow-y-auto z-[9999999]">
                   <div className="p-4 border-b border-gray-200">
                     <h3 className="font-semibold text-gray-900">
                       Recent Leads ({notifications.length})
