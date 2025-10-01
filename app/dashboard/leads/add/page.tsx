@@ -52,7 +52,8 @@ export default function AddLeadPage() {
       const leadData: LeadForm = {
         ...formData,
         updatedAt: new Date().toISOString(),
-        assignedBranch: formData.branchId || branches[0]?.id || "1",
+        assignedBranch:
+          formData.branchId || user?.branchId || branches[0]?.id || "1",
       };
 
       addNewLead(leadData);

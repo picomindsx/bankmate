@@ -784,37 +784,10 @@ const EmployeeDashboard = () => {
                                     <span className="font-medium">
                                       Assigned by:
                                     </span>{" "}
-                                    {lead.ownerManagerAssignment}
+                                    {lead.ownerManagerAssignmentName}
                                   </span>
                                 </div>
                               )}
-
-                              {/* Document Status */}
-                              {/* <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-purple-500" />
-                                <span className="text-sm">
-                                  <span className="font-medium">
-                                    Documents:
-                                  </span>{" "}
-                                  {getDocumentCompletionStatus(lead)}
-                                </span>
-                                {lead.documents &&
-                                  Array.isArray(lead.documents) &&
-                                  lead.documents.length > 0 && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {
-                                        lead.documents.filter(
-                                          (doc) =>
-                                            doc && doc.status === "verified"
-                                        ).length
-                                      }
-                                      /{lead.documents.length} verified
-                                    </Badge>
-                                  )}
-                              </div> */}
                             </div>
 
                             <div className="flex flex-col gap-2">
@@ -828,17 +801,6 @@ const EmployeeDashboard = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
                               </Button>
-                              {/* <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedLead(lead);
-                                  setShowFileTracker(true);
-                                }}
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                File Status
-                              </Button> */}
                               {!lead.assignedStaff && (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -900,102 +862,6 @@ const EmployeeDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* <TabsContent value="documents" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Document Pipeline Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {myLeads
-                    .filter(
-                      (lead) =>
-                        lead &&
-                        lead.documents &&
-                        Array.isArray(lead.documents) &&
-                        lead.documents.length > 0
-                    )
-                    .map((lead) => (
-                      <Card
-                        key={lead.id}
-                        className="border-l-4 border-l-blue-500"
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold">
-                              {lead.clientName || "Unknown Client"}
-                            </h4>
-                            <Badge
-                              className={`${
-                                getDocumentCompletionStatus(lead) === "Complete"
-                                  ? "bg-green-500/20 text-green-700 border-green-300"
-                                  : "bg-orange-500/20 text-orange-700 border-orange-300"
-                              }`}
-                            >
-                              {getDocumentCompletionStatus(lead)}
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span>
-                                {lead.documents && Array.isArray(lead.documents)
-                                  ? lead.documents.filter(
-                                      (doc) => doc && doc.status === "verified"
-                                    ).length
-                                  : 0}{" "}
-                                Verified
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-orange-500" />
-                              <span>
-                                {lead.documents && Array.isArray(lead.documents)
-                                  ? lead.documents.filter(
-                                      (doc) => doc && doc.status === "provided"
-                                    ).length
-                                  : 0}{" "}
-                                Under Review
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                              <span>
-                                {lead.documents && Array.isArray(lead.documents)
-                                  ? lead.documents.filter(
-                                      (doc) => doc && doc.status === "pending"
-                                    ).length
-                                  : 0}{" "}
-                                Pending
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-
-                  {myLeads.filter(
-                    (lead) =>
-                      lead &&
-                      lead.documents &&
-                      Array.isArray(lead.documents) &&
-                      lead.documents.length > 0
-                  ).length === 0 && (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">
-                        No document workflows active
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent> */}
 
           <TabsContent value="completed" className="space-y-4">
             <Card>

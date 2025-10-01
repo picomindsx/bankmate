@@ -77,7 +77,7 @@ export const getStaffAssignedLeads = async (
   // TODO: 2. Leads assigned to them by Owner/Manager/Branch Head
   // TODO: 3. Leads assigned from external sources
   const { data, error } = await supabase
-    .from("leads")
+    .from("branch_leads_view")
     .select("*")
     // .eq("created_by", staffId)
     .or(`created_by.eq.${staffId},assigned_staff.eq.${staffId})`);

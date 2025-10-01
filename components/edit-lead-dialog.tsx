@@ -21,7 +21,6 @@ import {
 import {
   APPLICATION_STATUS,
   BANK_STATUS,
-  BANKS,
   DOCUMENT_STATUS,
   GENDER_OPTIONS,
   INCOME_CATEGORY,
@@ -44,6 +43,9 @@ import {
   getDocumentStatusColor,
   getStatusColor,
 } from "@/lib/utils";
+import { useBank } from "@/hooks/use-bank";
+import { addBank } from "@/services/bank-service";
+import { CustomList } from "./custom-list";
 
 const EditLeadDialog = ({
   lead,
@@ -57,6 +59,8 @@ const EditLeadDialog = ({
   onEditSuccess?: () => void;
 }) => {
   const { user } = useAuth();
+
+  const { banks: BANKS, fetchBanks } = useBank();
 
   const [editFormData, setEditFormData] = useState<Partial<LeadForm>>({});
 
@@ -906,27 +910,33 @@ const EditLeadDialog = ({
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex flex-col items-start">
                     <Label htmlFor="selectedBank">Bank Selection</Label>
 
-                    <select
-                      id="selectedBank"
-                      value={editFormData.bankSelection}
-                      onChange={(e) =>
+                    <CustomList
+                      value={editFormData.bankSelection || ""}
+                      items={
+                        BANKS
+                          ? BANKS?.map((bank) => ({
+                              label: bank.name,
+                              value: bank.name,
+                            }))
+                          : []
+                      }
+                      type="bank"
+                      onChange={(val) =>
                         setEditFormData({
                           ...editFormData,
-                          bankSelection: e.target.value,
+                          bankSelection: val,
                         })
                       }
-                      className="w-full px-3 py-2 border rounded-md bg-background"
-                    >
-                      <option value="">Select bank</option>
-                      {BANKS.map((bank) => (
-                        <option key={bank} value={bank}>
-                          {bank}
-                        </option>
-                      ))}
-                    </select>
+                      onCustomAdd={async (val) => {
+                        const bank = await addBank(val);
+                        if (bank) {
+                          fetchBanks && fetchBanks();
+                        }
+                      }}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bankBranch">Bank Branch</Label>

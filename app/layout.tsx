@@ -4,9 +4,10 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "@/hooks/use-auth";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { BankProvider, useBank } from "@/hooks/use-bank";
 
 export const metadata: Metadata = {
   title: "Bankmate Solutions Pvt. Ltd.",
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <BankProvider>{children}</BankProvider>
+          </AuthProvider>
           <Toaster position="bottom-center" richColors />
         </Suspense>
         <Analytics />

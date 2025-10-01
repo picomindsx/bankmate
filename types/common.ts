@@ -330,3 +330,8 @@ export type IUrgencyLevel = "Low" | "Medium" | "High" | "Immediate";
 export type ILoanDocument = (typeof LOAN_DOCUMENTS)[number];
 export type IDocumentStatus = (typeof DOCUMENT_STATUS)[number];
 export type IBankStatus = (typeof BANK_STATUS)[number];
+
+export interface IBank {
+  id?: string;
+  name: string;
+}
