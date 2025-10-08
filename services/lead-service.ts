@@ -178,6 +178,7 @@ export const updateLead = async (
   const newUpdates = { ...updates };
   delete newUpdates.assignedStaffName;
   delete newUpdates.ownerManagerAssignmentName;
+  delete newUpdates.createdByName;
 
   const { data, error } = await supabase
     .from("leads")

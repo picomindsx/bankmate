@@ -54,6 +54,7 @@ export default function AddLeadPage() {
         updatedAt: new Date().toISOString(),
         assignedBranch:
           formData.branchId || user?.branchId || branches[0]?.id || "1",
+        createdBy: user?.id,
       };
 
       addNewLead(leadData);

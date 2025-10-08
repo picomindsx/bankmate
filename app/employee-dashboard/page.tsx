@@ -46,6 +46,7 @@ import {
   X,
   Edit,
   Trash2,
+  UserPlus,
 } from "lucide-react";
 import Image from "next/image";
 import { getBranches } from "@/services/branch-service";
@@ -193,7 +194,7 @@ const EmployeeDashboard = () => {
     const lead: LeadForm = {
       ...(newLead as LeadForm),
       createdAt: new Date().toISOString(),
-      createdBy: user!.id,
+      createdBy: user?.id,
       assignedBranch: user!.branchId,
       // documents: {
       //   "PAN Card": false,
@@ -785,6 +786,18 @@ const EmployeeDashboard = () => {
                                       Assigned by:
                                     </span>{" "}
                                     {lead.ownerManagerAssignmentName}
+                                  </span>
+                                </div>
+                              )}
+
+                              {lead.createdBy && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <UserPlus className="h-4 w-4 text-blue-500" />
+                                  <span className="text-sm">
+                                    <span className="font-medium">
+                                      Created by:
+                                    </span>{" "}
+                                    {lead.createdByName}
                                   </span>
                                 </div>
                               )}

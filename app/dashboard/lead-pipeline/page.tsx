@@ -211,6 +211,10 @@ function SortableLeadCard({
             </div>
           )}
 
+          <p className="text-xs text-gray-500">
+            Created By: {lead.createdByName}
+          </p>
+
           <div className="flex gap-1">
             <Button
               size="sm"

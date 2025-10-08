@@ -69,8 +69,6 @@ import { getStatusColor } from "@/lib/utils";
 import {
   AlertDialogHeader,
   AlertDialogFooter,
-} from "@/components/ui/alert-dialog";
-import {
   AlertDialog,
   AlertDialogTrigger,
   AlertDialogContent,
@@ -78,7 +76,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@radix-ui/react-alert-dialog";
+} from "@/components/ui/alert-dialog";
 import AssignReassign from "@/components/assign-reassign";
 
 export default function LeadManagementPage() {
@@ -666,6 +664,9 @@ export default function LeadManagementPage() {
                                           : lead.leadSource || "Unknown"}
                                       </Badge>
                                     </div>
+                                    <p className="text-xs text-gray-500">
+                                      Created By: {lead.createdByName}
+                                    </p>
                                   </div>
 
                                   <div className="flex gap-1">
@@ -783,6 +784,9 @@ export default function LeadManagementPage() {
                                     <p className="text-xs text-gray-500">
                                       Bank:{" "}
                                       {lead.bankSelection || "Not assigned"}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Created By: {lead.createdByName}
                                     </p>
                                     <div className="flex gap-1">
                                       <Button
