@@ -90,6 +90,7 @@ export default function LeadManagementPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [documentFilter, setDocumentFilter] = useState("all");
   const [assignmentFilter, setAssignmentFilter] = useState("all");
@@ -162,9 +163,9 @@ export default function LeadManagementPage() {
       (lead.leadName &&
         lead.leadName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesDate =
-      !dateFilter ||
-      new Date(lead.createdAt!).toDateString() ===
-        new Date(dateFilter).toDateString();
+      !dateFilter || new Date(lead.createdAt!) >= new Date(dateFilter);
+    const matchesToDate =
+      !dateToFilter || new Date(lead.createdAt!) <= new Date(dateToFilter);
     const matchesStatus =
       statusFilter === "all" || lead.applicationStatus === statusFilter;
 
@@ -172,7 +173,13 @@ export default function LeadManagementPage() {
       assignmentFilter === "all" ||
       (assignmentFilter === "assigned" && lead.assignedStaff) ||
       (assignmentFilter === "unassigned" && !lead.assignedStaff);
-    return matchesSearch && matchesDate && matchesStatus && matchesAssignment;
+    return (
+      matchesSearch &&
+      matchesDate &&
+      matchesToDate &&
+      matchesStatus &&
+      matchesAssignment
+    );
   });
 
   const unassignedLeads = leads.filter(
@@ -533,45 +540,38 @@ export default function LeadManagementPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 bottom-[1px] transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Label htmlFor="search">Search Leads</Label>
                 <Input
+                  id="search"
                   placeholder="Search leads..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-white/10 border-white/20 placeholder:text-gray-400"
                 />
               </div>
-              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="bg-white/10 border-white/20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="login">Login</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="sanctioned">Sanctioned</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select> */}
-              {/* <Select
-                value={assignmentFilter}
-                onValueChange={setAssignmentFilter}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Leads</SelectItem>
-                  <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                </SelectContent>
-              </Select> */}
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="bg-white/10 border-white/20 mr-2"
-              />
+
+              <div>
+                <Label htmlFor="from">From</Label>
+                <Input
+                  type="date"
+                  id="from"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-white/10 border-white/20 mr-2"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="to">To</Label>
+                <Input
+                  type="date"
+                  id="to"
+                  value={dateToFilter}
+                  onChange={(e) => setDateToFilter(e.target.value)}
+                  className="bg-white/10 border-white/20 mr-2"
+                />
+              </div>
               <Button
                 onClick={() => router.push(`/dashboard/leads/${branchId}/add`)}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white col-start-5"

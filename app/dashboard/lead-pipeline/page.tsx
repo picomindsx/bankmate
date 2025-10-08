@@ -361,6 +361,8 @@ export default function LeadPipelinePage() {
   const [selectedLead, setSelectedLead] = useState<LeadForm | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showFileTracker, setShowFileTracker] = useState(false);
+  const [dateFilter, setDateFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const [bankSelection, setSelectedBank] = useState("");
   const [customBanks, setCustomBanks] = useState<string[]>([]);
@@ -419,7 +421,12 @@ export default function LeadPipelinePage() {
         lead.leadName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesBranch =
       branchFilter === "all" || lead.branchId === branchFilter;
-    return matchesSearch && matchesBranch;
+
+    const matchesDate =
+      !dateFilter || new Date(lead.createdAt!) >= new Date(dateFilter);
+    const matchesToDate =
+      !dateToFilter || new Date(lead.createdAt!) <= new Date(dateToFilter);
+    return matchesSearch && matchesBranch && matchesDate && matchesToDate;
   });
 
   const newLeads = filteredLeads.filter(
@@ -716,28 +723,58 @@ export default function LeadPipelinePage() {
       {/* Filters */}
       <div className="p-6 border-b border-white/10">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-white" />
+          <div>
+            <Label htmlFor="search">Search</Label>
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-black" />
+              <Input
+                id="search"
+                placeholder="Search leads..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 bg-white/10 border-white/20 placeholder:text-gray-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="branch">Select Branch</Label>
+            <Select value={branchFilter} onValueChange={setBranchFilter}>
+              <SelectTrigger className="w-48 bg-white/10 border-white/20">
+                <SelectValue placeholder="Filter by branch" />
+              </SelectTrigger>
+              <SelectContent id="branch">
+                <SelectItem value="all">All Branches</SelectItem>
+                {branches.map((branch) => (
+                  <SelectItem key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="from">From</Label>
             <Input
-              placeholder="Search leads..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-white/10 border-white/20 placeholder:text-gray-400"
+              type="date"
+              id="from"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="bg-white/10 border-white/20 mr-2"
             />
           </div>
-          <Select value={branchFilter} onValueChange={setBranchFilter}>
-            <SelectTrigger className="w-48 bg-white/10 border-white/20">
-              <SelectValue placeholder="Filter by branch" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Branches</SelectItem>
-              {branches.map((branch) => (
-                <SelectItem key={branch.id} value={branch.id}>
-                  {branch.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          <div>
+            <Label htmlFor="to">To</Label>
+            <Input
+              type="date"
+              id="to"
+              value={dateToFilter}
+              onChange={(e) => setDateToFilter(e.target.value)}
+              className="bg-white/10 border-white/20 mr-2"
+            />
+          </div>
         </div>
       </div>
 
