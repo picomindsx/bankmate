@@ -318,6 +318,7 @@ export interface LeadForm {
   assignmentStatus?: string;
   assignedStaffName?: string;
   ownerManagerAssignmentName?: string;
+  createdByName?: string;
   documents?: ILoanDocument[];
   documentStatus?: IDocumentStatus;
   bankStatus?: IBankStatus;
